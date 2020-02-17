@@ -1,7 +1,7 @@
 ---
-title: "Linear Modeling in R"
+title: "Linear Modeling with R"
 author: "Clay Ford"
-date: "Fall 2016"
+date: "Spring 2020"
 output: beamer_presentation
 ---
 
@@ -165,7 +165,7 @@ The `car` package has two nice exploratory plotting functions: `scatterplot` and
 
 - For example, `summary(lm1)`.
 
-Let's go to the R script.
+
 
 ## A closer look at the `R` model summary
 
@@ -250,9 +250,6 @@ F-statistic: 18.24 on 7 and 89 DF,  p-value: 7.694e-15
 
 - Use the `newdata` argument to make predictions using new data (ie, data not used to build model). New data must be a data frame.
 
-- The `visreg` package provides a nice function called `visreg` to easily plot regression lines with confidence intervals.
-
-Let's go to R.
 
 ## Model specification in `R`
 
@@ -291,7 +288,7 @@ See `help(formula)` for more information.
 - `y ~ (u + x + z)^2` (multiple regression with all 2-way interactions)
 - `y ~ x + I(x^2)` (polynomial regression)
 
-Let's go to R.
+
 
 ## Using categorical predictors in model building
 
@@ -407,7 +404,7 @@ summary(lm(resp ~ level * pos, test))$coefficients[,1, drop=F]
 
 - If we include an interaction in our model for $X_{1}$ and $X_{2}$, then we cannot directly interpret the coefficients for $X_{1}$ and $X_{2}$. Their effects depend on each other.
 
-- To get an idea of how they interact we can create an interaction plot or visualize the model using a package such as `visreg`.
+- To get an idea of how they interact we can create an interaction plot or visualize the model using a package such as `ggeffects`.
 
 - We usually want to find out if the interaction is significant. We can do this with the `anova` function.
 
@@ -439,9 +436,6 @@ TukeyHSD(aov1) # multilple comparisons of means
 * How do you know if a variable is coded as factor? Use `class` or `is.factor`. Can also inspect structure of data frame using `str`.
 
 * Calling `summary` on factors produces a table of counts.
-
-
-Let's go to the R script.
 
 
 
@@ -484,7 +478,6 @@ par(mfrow=c(1,1))
 3. Scale-Location: should have a horizontal line with uniform scatter of point; (_similar to #1 but easier to detect trend in dispersion_)
 4. Residuals vs Leverage: points should lie _within_ contour lines
 
-Let's go to R.
 
 ## Updating linear models
 
@@ -546,11 +539,10 @@ anova(lm2, lm1)
 
 - Use the `step` function in R to execute a search method that compares models sequentially.
 
-Back to the R script.
 
 ## More R packages for modeling
 
-- `effects`: visualizing model effects; similar to `visreg` but with a few more features
+- `effects`: visualizing model effects; similar to `ggeffects` but with a few more features
 
 - `broom`: Convert statistical analysis objects into tidy data frames; great if you want to do further analysis or plotting of statistical results; works great with `dplyr` and `ggplot2`
 
@@ -558,7 +550,6 @@ Back to the R script.
 
 - `coefplot`: plot model coefficients; visualize coefficient magnitudes along with their standard errors
 
-- `stargazer`: Produces LaTeX code, HTML/CSS code and ASCII text for well-formatted tables that hold regression analysis results from several models side-by-side, as well as summary statistics
 
 ## References
 

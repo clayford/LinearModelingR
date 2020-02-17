@@ -208,7 +208,7 @@ summary(m)
 
 # We are interested in predicting home sales prices as a function of various
 # characteristics.
-sales <- read.csv("real_estate_sales.csv")
+sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv")
 
 # price - sale price in dollars (our response/dependent variable)
 # finsqft - finished square feet
