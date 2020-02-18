@@ -460,13 +460,13 @@ p
 # The ggpredict() result can be saved and used as a data frame with ggplot
 eff_out <- ggpredict(sales_mod5, terms = c("bedrooms", "finsqft[1500, 2000, 2500]"))
 names(eff_out)
-ggplot(eff_out, aes(x = x, y = predicted, color = group)) +
+eff_out <- eff_out %>% 
+  rename(`Fin Sq Ft`=group)
+ggplot(eff_out, aes(x = x, y = predicted, color = `Fin Sq Ft`)) +
   geom_line() +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = 1/5) +
-  scale_x_continuous("Bedrooms") +
-  scale_y_continuous("Home Price") +
-  scale_color_discrete("Fin Sq Ft") +
-  scale_fill_discrete("Fin Sq Ft")
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = `Fin Sq Ft`), 
+              alpha = 1/5)
+  
 
 
 # When should you include interactions? What kind? How many? That requires some
