@@ -171,15 +171,15 @@ The `car` package has two nice exploratory plotting functions: `scatterplot` and
 
 ```
 Call:
-lm(formula = psa ~ volume + weight + age + bph + svi + cap.pen + 
-    gleason.score, data = prostate)
+lm(formula = price ~ finsqft + bedrooms + lotsize, data = sales)
+
 ```
 Repeat of the function call.  Useful if result is saved and then printed later.
 
 ```
 Residuals:
-     Min       1Q   Median       3Q      Max 
--1.88309 -0.46629  0.08045  0.47380  1.53219 
+    Min      1Q  Median      3Q     Max 
+-219284  -38284   -5933   29009  376303  
 ```
 
 Quick check of the distributional (Normal) assumptions of residuals. Median should not be far from 0. Max and Min, and 1Q and 3Q, should be roughly equal in absolute value.
@@ -188,12 +188,12 @@ Quick check of the distributional (Normal) assumptions of residuals. Median shou
 
 ```
 Coefficients:
-               Estimate Std. Error t value Pr(>|t|)    
-(Intercept)   -0.685796   0.998754  -0.687  0.49409    
-volume         0.069454   0.014624   4.749 7.77e-06 ***
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -8.761e+04  1.418e+04  -6.177 1.33e-09 ***
+finsqft      1.634e+02  5.804e+00  28.149  < 2e-16 ***
 ...
 ---
-Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 ```
 - **Estimate**: $\hat{\beta}$
@@ -253,7 +253,7 @@ F-statistic: 18.24 on 7 and 89 DF,  p-value: 7.694e-15
 
 ## Model specification in `R`
 
-- We mentioned earlier R uses the _Wilkinson-Rogers_ notation for specifying models:
+- R uses the _Wilkinson-Rogers_ notation for specifying models:
 
 > response variable ~ explanatory variable(s)
 
@@ -299,8 +299,8 @@ See `help(formula)` for more information.
 * A factor is a set of integer codes with associated _levels_. With categorical variables encoded as factors, R automatically and correctly incorporates them into a linear model.
 
 * Either define a variable as a factor in a data frame or in the `lm` formula:   
-    + `prostate$gleason.score <- factor(prostate$gleason.score)`    
-    + `lm(psa ~ factor(gleason.score), data=prostate)`    
+    + `sales$quality <- factor(sales$quality)`    
+    + `lm(price ~ factor(quality), data=sales)`    
 
 * Recommended to define variable as factor in the data frame.
 
@@ -429,13 +429,51 @@ summary(aov)
 TukeyHSD(aov1) # multilple comparisons of means
 ```
 
-## More information on Factors
 
-* Character variables are automatically converted to factors on import if using base R `read.` functions.
+## Non-linear effects
 
-* How do you know if a variable is coded as factor? Use `class` or `is.factor`. Can also inspect structure of data frame using `str`.
+- Often the simple assumption of a linear effect of a predictor is unrealistic.
 
-* Calling `summary` on factors produces a table of counts.
+- the `ns()` function from the splines package allows us to fit non-linear effects, similar to a polynomial. ns stands for natural splines. Its second argument is the degrees of freedom. It
+may help to think of that as the number of times the smooth line changes directions.
+
+- 3 to 5 degrees of freedom is almost always sufficient. Example:
+
+```{r eval=FALSE}
+sales_mod7 <-  lm(log(price) ~ ns(finsqft, df = 3) + 
+                      bedrooms + lotsize + 
+                      bathrooms + garagesize + 
+                      quality + highway,
+                  data = sales)
+```
+
+## Partial residual plots
+
+- Partial residual plots can help us determine if we need non-linear effects. Also called term plots and component-residual plots. 
+
+- The `crPlots()` function from the car package is very useful for this. Example:
+
+```{r eval=FALSE}
+crPlots(sales_mod6, terms = ~ finsqft + bedrooms + 
+            bathrooms + garagesize + lotsize)
+```
+
+- The blue dashed line is the fitted slope. The purple line is a smooth trend line. A curving purple line indicates a non-linear effect may warrant a non-linear effect.
+
+## Example of partial residual plot
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(car)
+sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv",stringsAsFactors = FALSE)
+sales_mod6 <-  lm(log(price) ~ finsqft + bedrooms + bathrooms + garagesize + lotsize, 
+                  data = sales)
+
+```
+
+```{r}
+crPlots(sales_mod6, terms = ~ finsqft)
+
+```
 
 
 
@@ -529,15 +567,17 @@ anova(lm2, lm1)
 - A low p-value says reject null; the larger model has more explanatory power.
 
 
-## Criterion-based approach - AIC
+## Criterion-based approaches - AIC/BIC
 
-- One common criteria is the Akaike Information Criterion (AIC).
+- Two common criteria is the Akaike Information Criterion (AIC) and the Bayesian information criterion (BIC)
 
-- We want to minimize AIC.
+- These values estimate the out-of-sample accuracy if we were to use these models to make predictions on new data. 
+
+- Models with lower AIC and BIC are usually preferred. 
 
 - This approach requires _no hypothesis testing_ unlike the testing-based procedure. 
 
-- Use the `step` function in R to execute a search method that compares models sequentially.
+- Beware of "close finishes". Just because a model has a slightly lower AIC/BIC doesn't mean it's necessarily better. Would we get the same result with a new sample? 
 
 
 ## More R packages for modeling

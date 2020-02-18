@@ -96,7 +96,7 @@ lines(density(y2), col = "red")
 
 # In real life, we DO NOT KNOW the formula of weighted sums, or even if a
 # formula of weighted sums is appropriate. We also don't know if the Normality
-# assumption or constant variance assumption is plausible.
+# assumption or constant variance assumption of the noise is plausible.
 
 
 # Another example:
@@ -121,7 +121,8 @@ dat <- data.frame(y, gender, score)
 ggplot(dat, aes(x = score, y = y, color = gender)) +
   geom_point()
 
-# distribution of y
+# distribution of y; notice it's not Normal. That's OK. The normality assumption
+# is for the noise/error.
 ggplot(dat, aes(x = y, y = stat(density))) +
   geom_histogram(bins = 20) +
   geom_density()
@@ -134,6 +135,7 @@ mod2 <- lm(y ~ gender + score + gender:score, data = dat)
 # or more succinctly
 mod2 <- lm(y ~ gender * score, data = dat)
 
+# We come pretty close to recovering the true values...
 summary(mod2)
 
 # Let's simulate data from our model and see how it compares to the original
@@ -161,10 +163,11 @@ ggplot(dat, aes(x = score, y = y, color = gender)) +
 # referred to as "effect plots". Here we use the ggpredict() function from the
 # ggeffects package.
 eff <- ggpredict(mod2, terms = c("score", "gender"))
+eff
 plot(eff, add.data = TRUE)
 
 
-# Let's fit a "wrong" model, no intercept
+# Let's fit a "wrong" model, no interaction.
 # "y ~ gender + score" means "y = intercept + b1*gender + b2*score"
 # The effect of score is the same for both males and female
 mod3 <- lm(y ~ gender + score, data = dat)
@@ -197,8 +200,8 @@ y <- 5 + 10*x1 + -4*x2 + noise
 df <- data.frame(y, x1, x2)
 
 # Use lm() in attempt to recover the "true" values.
-m <- lm(y ~ x1 + x2)
-summary(m)
+
+
 
 
 
@@ -208,7 +211,8 @@ summary(m)
 
 # We are interested in predicting home sales prices as a function of various
 # characteristics.
-sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv")
+sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv",
+                  stringsAsFactors = FALSE)
 
 # price - sale price in dollars (our response/dependent variable)
 # finsqft - finished square feet
@@ -224,6 +228,14 @@ sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_e
 # glance at data
 str(sales)
 summary(sales)
+
+# Make categorical variables Factors;
+# mutate_if: if variable is character, make it a factor
+sales <- sales %>% 
+  mutate_if(is.character, factor)
+summary(sales)
+
+# dependent variable
 hist(sales$price)
 
 # fit a linear model using finsqft, bedrooms and lotsize
@@ -236,8 +248,8 @@ coef(sales_mod)
 
 # Some naive interpretation
 # - each additional finished square foot adds about $163 to price
-# - each additional lot size square foot adds about $1 to price
 # - each additional bedroom drops the price by $9,400 (?)
+# - each additional lot size square foot adds about $1 to price
 
 # Simulate data from model and compare to observed price
 sim_price <- simulate(sales_mod, nsim = 50)
@@ -327,25 +339,17 @@ exp(confint(sales_mod2)) %>% round(5)
 
 
 # Add bathrooms and garage size to the 2nd model we fit:
-# sales_mod <- lm(log(price) ~ finsqft + bedrooms + lotsize, data = sales)
-m2 <- lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize, 
-         data = sales)
-summary(m2)
+# (1) sales_mod <- lm(log(price) ~ finsqft + bedrooms + lotsize, data = sales)
 
-# check the diagnostic plots
-plot(m2)
 
-# What does the garagesize coefficient say?
-exp(coef(m2)) %>% round(3)
-# Each additional car space increases price by about 12%
+# (2) check the diagnostic plots
 
-exp(confint(m2)) %>% round(3)
-# Or each additional car space increases price by at least 8%
 
-# Challenge: simulate data from the model and compare to the observed price
-sim.price <- simulate(m2, nsim = 50)
-plot(density(log(sales$price)))
-for(i in 1:50)lines(density(sim.price[[i]]), lty = 2, col = "grey80")
+# (3) What does the garagesize coefficient say?
+
+
+# (4) Challenge: simulate data from the model and compare to the observed price
+
 
 
 
@@ -400,16 +404,12 @@ coef(sales_mod4) %>% exp() %>% round(3)
 
 # Add highway to the following model and fit it.
 
-# lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize + quality,
-#    data = sales)
-m3 <- lm(log(price) ~ finsqft + bedrooms + lotsize + 
-           bathrooms + garagesize + quality + highway, 
-         data = sales)
+# (1) lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize + quality,
+#        data = sales)
 
-# What is the intreptation of highway? How does it relate to the expected price?
-coef(m3) %>% exp() %>% round(3)
 
-# Being next to a highway appears to decrease price by about 5%
+# (2) What is the intreptation of highway? How does it relate to the expected price?
+
 
 
 
@@ -436,11 +436,38 @@ plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms")))
 # add [1, 3, 5] next to bedrooms in the quotes
 plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms[1, 3, 5]")))
 
+# In the previous plot, the lines were curved reflecting the non-linear log
+# transformation of the response. Setting log.y = TRUE will transform the y-axis
+# to the log scale and hence make the lines straight.
+plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms[1, 3, 5]")),
+     log.y = TRUE)
+
 # Format the labels to show dollar amounts
 plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms[1, 3, 5]")),
+     log.y = TRUE,
      labels = scales::dollar)
 
 # The effect of finsqft decreases as number of bedrooms increase.
+
+# Switch the order of the terms to put bedrooms on the x-axis
+plot(ggpredict(sales_mod5, terms = c("bedrooms", "finsqft")))
+
+# again we can set the values of finsqft
+p <- plot(ggpredict(sales_mod5, terms = c("bedrooms", "finsqft[1500, 2000, 2500]")))
+p
+# At 2500 finished sq feet number of bedrooms doesn't really seem to matter,
+
+# The ggpredict() result can be saved and used as a data frame with ggplot
+eff_out <- ggpredict(sales_mod5, terms = c("bedrooms", "finsqft[1500, 2000, 2500]"))
+names(eff_out)
+ggplot(eff_out, aes(x = x, y = predicted, color = group)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group), alpha = 1/5) +
+  scale_x_continuous("Bedrooms") +
+  scale_y_continuous("Home Price") +
+  scale_color_discrete("Fin Sq Ft") +
+  scale_fill_discrete("Fin Sq Ft")
+
 
 # When should you include interactions? What kind? How many? That requires some
 # thought and expertise in the subject.
@@ -450,15 +477,11 @@ plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms[1, 3, 5]")),
 # YOUR TURN #4 ------------------------------------------------------------
 
 # Add an interaction for lotsize and quality to the following model:
-# lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
+# (1) lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
 #                    quality + highway, data = sales)
-m4 <- lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
-                   quality + highway + lotsize:quality, 
-         data = sales)
-summary(m4)
 
-# Try creating an effect plot; use the code above as a template.
-plot(ggpredict(m4, terms = c("lotsize", "quality")))
+
+# (2) Try creating an effect plot; use the code above as a template.
 
 
 
@@ -491,6 +514,7 @@ summary(mod5)
 
 # Use plot() and ggpredict() to plot fitted model with data
 plot(ggpredict(mod4), add.data = TRUE)
+plot(ggpredict(mod5), add.data = TRUE)
 
 # The modern approach to fitting non-linear effects is to use splines instead of
 # polynomials. 
@@ -499,7 +523,7 @@ plot(ggpredict(mod4), add.data = TRUE)
 # stands for natural splines. The second argument is the degrees of freedom. It
 # may help to think of that as the number of times the smooth line changes
 # directions.
-mod6 <- lm(y ~ ns(x, 2), data = nl_dat)
+mod6 <- lm(y ~ ns(x, df = 2), data = nl_dat)
 summary(mod6)
 plot(ggpredict(mod6), add.data = TRUE)
 
@@ -511,16 +535,22 @@ plot(ggpredict(mod6), add.data = TRUE)
 z <- 1:10      
 
 # classic polynomial transformation
-poly(z, 2, raw = TRUE)  
+p2_out <- poly(z, 2, raw = TRUE)  
+p2_out
 matplot(poly(z, 2, raw = TRUE))
+cor(p2_out[,1], p2_out[,2])
 
 # orthogonal, or uncorrelated, transformation
-poly(z, 2)
-matplot(poly(z, 2))              
+p2_out <- poly(z, 2)  
+p2_out
+matplot(poly(z, 2))
+cor(p2_out[,1], p2_out[,2])
 
 # natural spline transformation
-ns(z, 2)                
+ns_out <- ns(z, 2)                
+ns_out
 matplot(ns(z, 2))
+cor(ns_out[,1], ns_out[,2])
 
 # Frank Harrell states in his book Regression Model Strategies that 3 to 5 DF is
 # almost always sufficient. His basic advice is to allocate more DF to
@@ -530,12 +560,11 @@ matplot(ns(z, 2))
 # can help. Also called term plots and component-residual plots. We'll use the
 # crPlots() function from the car package.
 
-sales_mod6 <-  lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
-                    quality + highway, 
+sales_mod6 <-  lm(log(price) ~ finsqft + bedrooms + bathrooms + garagesize + lotsize, 
                   data = sales)
 
 # Notice we specify the numeric variables just as we would in a model
-crPlots(sales_mod6, terms = ~ finsqft + bedrooms + lotsize + bathrooms + garagesize)
+crPlots(sales_mod6, terms = ~ finsqft + bedrooms + bathrooms + garagesize + lotsize)
 crPlots(sales_mod6, terms = ~ finsqft)
 
 # Partial-residual plots show the relationship between a predictor and the
@@ -543,7 +572,7 @@ crPlots(sales_mod6, terms = ~ finsqft)
 
 # The blue dashed line is the fitted slope.
 # The purple line is a smooth trend line.
-# A curving purple line indicates a possible non-linear effect.
+# A curving purple line indicates a non-linear effect may warrant a non-linear effect.
 
 # Let's fit a non-linear effect for finsqft using a natural spline with 3 DF.
 sales_mod7 <-  lm(log(price) ~ ns(finsqft, df = 3) + bedrooms + lotsize +
@@ -562,20 +591,15 @@ crPlots(sales_mod7, ~ns(finsqft, df = 3))
 
 # Fit a non-linear effect for bedrooms using a natural spline with 3 DF.
 
-# lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
-#      quality + highway,
-#    data = sales)
+# (1) lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
+#                     quality + highway,
+#        data = sales)
 
-m5 <- lm(log(price) ~ finsqft + ns(bedrooms, df = 3) + lotsize + bathrooms + 
-           garagesize + quality + highway,
-         data = sales)
-summary(m5)
+# (2) generate an effect for the non-linear bedrooms effect
 
-# generate an effect for the non-linear bedrooms effect
-plot(ggpredict(m5, terms = "bedrooms[n = 20]"))
 
-# How does the crPlot look?
-crPlots(m5, ~ns(bedrooms, df = 3))
+# (3) How does the crPlot for bedrooms look?
+
 
 
 
@@ -593,54 +617,54 @@ crPlots(m5, ~ns(bedrooms, df = 3))
 
 # Example
 sales_mod1 <- lm(log(price) ~ finsqft + bedrooms + bathrooms, data = sales)
+# same model with ac added
+sales_mod2 <- lm(log(price) ~ finsqft + bedrooms + bathrooms + ac, data = sales)
 # same model with ac and pool added
-sales_mod2 <- lm(log(price) ~ finsqft + bedrooms + bathrooms + 
+sales_mod3 <- lm(log(price) ~ finsqft + bedrooms + bathrooms + 
                    ac + pool, data = sales)
 
 # test that both models are equally good at modeling price; sales_mod1 is a
 # subset of sales_mod2
-anova(sales_mod1, sales_mod2)
+anova(sales_mod1, sales_mod2, sales_mod3)
 
-# It appears sales_mod2, the more complex model, explains more of the
-# variability of price. The low p-value says we reject the NULL; the
-# bigger model appears to be better than the smaller model.
+# It appears sales_mod2 is superior to sales_mod1. The low p-value says we
+# reject the null; the bigger model appears to be better than the smaller model.
+# However it does not appear that sales_mod3 is appreciably better than
+# sales_mod2. The high p-value leads us to not reject the null of no difference
+# between the models.
 
 
-# We can also use the AIC or BIC information criteria. This is not a hypothesis
-# test. We simply see which has a lower value. These values estimate the
+# AIC and BIC
+
+# We can also use the AIC or BIC information criteria. These are not hypothesis
+# tests. We simply see which has a lower value. These values estimate the
 # out-of-sample accuracy if we were to use these models to make predictions on
-# new data.
-AIC(sales_mod1, sales_mod2)
-BIC(sales_mod1, sales_mod2)
+# new data. 
+
+# Both indicate sales_mod2 is preferred to the other two models
+AIC(sales_mod1, sales_mod2, sales_mod3)
+BIC(sales_mod1, sales_mod2, sales_mod3)
 
 # The nice thing about AIC/BIC is that we don't need to worry about whether the
-# models contain a subset of predictors.
+# models contain a subset of predictors. They just need to have the same
+# response variable.
 
 # While lower is better, sometimes it's hard to know how much lower AIC/BIC
 # needs to be. If a really complex model is only slightly lower than an easier
-# to understand simple model, the simple model may be preferable.
+# to understand smaller model, the smaller model may be preferable.
+
 
 
 # YOUR TURN #6 ------------------------------------------------------------
 
-# Compare these two models. The second contains a complex interaction between
-# finsqft and bedrooms.
+# Compare these two models using anova(), AIC() and BIC(). The second contains a
+# complex interaction between finsqft and bedrooms.
 home_mod1 <- lm(log(price) ~ ns(finsqft, 3) + ns(bedrooms, 3) + bathrooms + 
                    ac + pool + quality, data = sales)
 home_mod2 <- lm(log(price) ~ ns(finsqft, 3) * ns(bedrooms, 3) + bathrooms + 
                   ac + pool + quality, data = sales)
-anova(home_mod1, home_mod2)
-AIC(home_mod1, home_mod2)
 
-plot(ggpredict(home_mod2, terms = c("finsqft", "bedrooms[1 ,3, 5]")))
 
-sim_mod2 <- simulate(home_mod2, nsim = 50)
-plot(density(log(sales$price)))
-for(i in 1:50)lines(density(sim_mod2[[i]]), col = "grey80")
-
-sim_mod1 <- simulate(home_mod1, nsim = 50)
-plot(density(log(sales$price)))
-for(i in 1:50)lines(density(sim_mod1[[i]]), col = "grey80")
 
 
 # Using a linear model ----------------------------------------------------
@@ -651,8 +675,12 @@ for(i in 1:50)lines(density(sim_mod1[[i]]), col = "grey80")
 # be in a data frame.
 
 # Let's say we want to use this model
-sales_mod7 <-  lm(log(price) ~ ns(finsqft, df = 3) * bedrooms + lotsize +
-                    bathrooms + garagesize + quality + highway + ac,
+sales_mod7 <-  lm(log(price) ~ ns(finsqft, df = 3) + bedrooms +
+                    quality + lotsize + ns(bathrooms, df = 2) + 
+                    ns(garagesize, df = 2) + pool + ac + 
+                    ns(finsqft, df = 3):bedrooms + 
+                    ns(finsqft, df = 3):quality + 
+                    ns(finsqft, df = 3):ns(bathrooms, df = 2),
                   data = sales)
 summary(sales_mod7)
 plot(density(log(sales$price)))
@@ -661,15 +689,17 @@ for(i in 1:50)lines(density(sim_mod7[[i]]), col = "grey80")
 
 
 # Predict mean home price with the following characteristics
-newdata <- data.frame(finsqft = 2500, bedrooms = 4, lotsize = 20000,
-                      bathrooms = 2, garagesize = 2, quality = "medium",
-                      highway = "no", ac = "yes")
-predict(sales_mod7, newdata = newdata)
+newdata <- data.frame(finsqft = 2500, 
+                      bedrooms = 4, 
+                      quality = "medium",
+                      lotsize = 20000, 
+                      bathrooms = 2, 
+                      garagesize = 2, 
+                      pool = "no", 
+                      ac = "yes")
+predict(sales_mod7, newdata = newdata) %>% exp()
 
 # with 95% confidence interval
-predict(sales_mod7, newdata = newdata, interval = "confidence")
-
-# convert back to original scale
 predict(sales_mod7, newdata = newdata, interval = "confidence") %>% exp()
 
 # Predict a SINGLE home price.
@@ -679,11 +709,14 @@ predict(sales_mod7, newdata = newdata, interval = "prediction") %>% exp()
 
 # Predict mean home price for same measures but with lotsize ranging from 5,000
 # to 85,000.
-newdata <- data.frame(finsqft = 2500, bedrooms = 4, 
-                      lotsize = seq(5000, 85000, 5000),
-                      bathrooms = 2, garagesize = 2, quality = "medium",
-                      highway = "no", ac = "yes")
-predict(sales_mod7, newdata = newdata)
+newdata <- data.frame(finsqft = 2500, 
+                      bedrooms = 4, 
+                      quality = "medium",
+                      lotsize = seq(5000,85000,5000), 
+                      bathrooms = 2, 
+                      garagesize = 2, 
+                      pool = "no", 
+                      ac = "yes")
 predict(sales_mod7, newdata = newdata, interval = "confidence") %>% exp()
 
 # This is basically how effect plots are created.
@@ -702,11 +735,26 @@ ggplot(pred_out, aes(x = lotsize, y = fit)) +
 eff_out <- ggpredict(sales_mod7, terms = "lotsize", 
                     condition = c(finsqft = 2500, 
                                   bedrooms = 4,
+                                  quality = "medium",
                                   bathrooms = 2,
                                   garagesize = 2,
-                                  quality = "medium",
-                                  highway = "no",
+                                  pool = "no",
                                   ac = "yes"))
+plot(eff_out)
+
+
+# YOUR TURN #7 ------------------------------------------------------------
+
+# Modify the code below to produce an effect of plot for quality with lotsize
+# set to 20000.
+eff_out <- ggpredict(sales_mod7, terms = "lotsize", 
+                     condition = c(finsqft = 2500, 
+                                   bedrooms = 4,
+                                   quality = "medium",
+                                   bathrooms = 2,
+                                   garagesize = 2,
+                                   pool = "no",
+                                   ac = "yes"))
 plot(eff_out)
 
 
