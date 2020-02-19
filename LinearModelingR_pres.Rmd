@@ -597,7 +597,7 @@ anova(lm2, lm1)
 
 * Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
 
-* James, G., et al. (2013). _An Introduction to Statistical Learning_. New York: Springer.
+* Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
 
 * Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
 
