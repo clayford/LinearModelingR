@@ -10,4 +10,6 @@ R is available to everyone. The only prior knowledge assumed for this workshop i
 
 ## Workshop Materials
 
-Coming soon!
+Download the zip file and extract the files. It contains an R script, a PDF slide deck for reference, and answers to the exercises.
+
+[LinearModelingR.zip](https://github.com/clayford/LinearModelingR/raw/master/LinearModelingR.zip)
