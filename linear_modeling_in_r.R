@@ -490,7 +490,7 @@ ggplot(eff_out, aes(x = x, y = predicted, color = `Fin Sq Ft`)) +
 # Often the simple assumption of a linear effect of a predictor is unrealistic.
 # Fortunately there are ways to fit non-linear effects in a linear model.
 
-# Let's demostrate with some simulated data
+# Let's demonstrate with some simulated data
 
 # polynomial of degree 2
 x <- seq(from = -10, to = 10, length.out = 100)
