@@ -64,7 +64,7 @@ par(opar)
 
 ## Model error
 
-Our model doesn't perfectly predict Y. The length of the red lines (the residuals) are used to estimate the error of our model.
+Our model doesn't perfectly predict Y. The length of the red lines (the residuals) are used to estimate the error of our model. We can think of the error as sort of like the average absolute distance of the red lines.
 
 ```{r, echo=FALSE}
 x <- seq(1,10)
@@ -257,7 +257,7 @@ F-statistic: 18.24 on 7 and 89 DF,  p-value: 7.694e-15
 
 > response variable ~ explanatory variable(s)
 
-- The tilde (~) can be read as "is modelled as a function of" or "described by" or "regressed on".
+- The tilde (~) can be read as "is modeled as a function of" or "described by" or "regressed on".
 
 - Model formulation is used throughout R in plotting, aggregation and statistical tests. 
 
@@ -286,9 +286,9 @@ See `help(formula)` for more information.
 - `y ~ u + x + z + u:x + u:z + x:z + u:x:z` (multiple regression with all interactions)
 - `y ~ u * x * z` (same as previous)
 - `y ~ (u + x + z)^2` (multiple regression with all 2-way interactions)
-- `y ~ x + I(x^2)` (polynomial regression)
-
-
+- `y ~ x + I(x^2)` ("raw" polynomial regression, degree 2)
+- `y ~ poly(x, 2)` (orthogonal polynomial regression, degree 2)
+- `y ~ ns(x, 2)` (spline regression, df = 2; `library(splines)`)
 
 ## Using categorical predictors in model building
 
@@ -458,7 +458,7 @@ crPlots(sales_mod6, terms = ~ finsqft + bedrooms +
             bathrooms + garagesize + lotsize)
 ```
 
-- The blue dashed line is the fitted slope. The purple line is a smooth trend line. A curving purple line indicates a non-linear effect may warrant a non-linear effect.
+- The blue dashed line is the fitted slope. The purple line is a smooth trend line. A curving purple line indicates a non-linear effect may be warranted.
 
 ## Example of partial residual plot
 

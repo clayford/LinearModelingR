@@ -499,7 +499,7 @@ plot(ggpredict(m6, terms = c("fullbath", "hsdistrict")))
 # place fullbath on x-axis, group by hsdistrict
 ```
 
-What's the effect of fullbath? It depends. It's more dramatic in Western Albemarle and Monticello. Of course a lot of the difference comes at extreme values of fullbath. The "ribbons" around the lines are 95% confidence intervals.
+What's the effect of `fullbath`? It depends. It's more dramatic in Western Albemarle and Monticello. Of course a lot of the difference comes at extreme values of `fullbath`. The "ribbons" around the lines are 95% confidence intervals.
 
 What exactly was plotted? We can see by calling `ggpredict` without `plot`
 
