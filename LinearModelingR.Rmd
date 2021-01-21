@@ -157,27 +157,15 @@ Let's see what happens when we fit a bad model. Below we add a new column to dat
 d$z <- runif(25)
 ```
 
-1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called "mod2". View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
+1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called `mod2`. View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
 
-```{r}
-mod2 <- lm(y ~ z, data = d)
-summary(mod2)
-```
 
 2. Use the summary results to generate a new set of data and name it "y3", similar to how we generated "y2" above.
 
-```{r}
-y3 <- 72.222 + 8.782 * d$z + rnorm(25, sd = 39.04)
-```
 
 3. Compare the smooth densities of `d$y` and `y3`. 
 
-```{r}
-hist(d$y, freq = F) # freq = F means area of bars sums to 1
-lines(density(d$y))
-y3 <- 72.222 + 8.782 * d$z + rnorm(25, sd = 39.04)
-lines(density(y3), col = "red")
-```
+
 
 
 Let's do some linear modeling with real data. 
@@ -269,6 +257,8 @@ plot(density(homes$totalvalue))
 for(i in 1:50)lines(density(sim1[[i]]), col = "grey80")
 
 ```
+
+(See end of notebook for how to create this plot using ggplot2 and for how to turn this into a function.)
 
 This does not appear to be a good model. In fact some of our simulated values are negative!
 
@@ -386,32 +376,16 @@ According to our model, each additional bedroom adds between 2% and 6% to the va
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath` and `finsqft.` Call your model `m3`
 
-```{r}
-m3 <- lm(log(totalvalue) ~ fullbath + finsqft, data = homes)
-summary(m3)
-```
-
 
 2. Insert a code chunk below and check the diagnostic plots
 
-```{r}
-plot(m3)
-```
 
 
 3. How do we interpret the fullbath coefficient?
 
-```{r}
-round(exp(coef(m3)), 4)
-```
 
 4. Insert a code chunk below and simulate data from the model and compare to the observed `totalvalue`. Does this look like a good model?
 
-```{r}
-sim3 <- simulate(m3, nsim = 50)
-plot(density(log(homes$totalvalue)))
-for(i in 1:50)lines(density(sim3[[i]]), lty = 2, col = "grey80")
-```
 
 ## Categorical predictors
 
@@ -455,16 +429,10 @@ It appears that the value of a home in Western Albemarle will be about 11% highe
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft` and `cooling.` Call your model `m5`. 
 
-```{r}
-m5 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling, data = homes)
-summary(m5)
-```
 
 2. What is the interpretation of cooling? What is the baseline or reference level?
 
-```{r}
-round(exp(coef(m5)), 4)
-```
+
 
 ## Modeling Interactions
 
@@ -529,17 +497,36 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft`, `cooling`, and the interaction of `finsqft` and `cooling`. Call your model `m7`. Is the interaction warranted?
 
-```{r}
-m7 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling + finsqft:cooling, 
-         data = homes)
-anova(m7)
-```
+
 
 2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis.
 
-```{r}
-plot(ggpredict(m7, terms = c("finsqft[1000:4000 by=500]", "cooling")))
-```
+
+## Wrap-up
+
+This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works.
+
+What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
+
+Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
+
+- generalized linear models (for binary and count responses)
+- multinomial logit models (for categorical responses)
+- ordered logit models (for ordered categorical responses)
+- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject)
+- survival models (for responses that measure time to an event)
+- time series models (for responses that exhibit, say, seasonal variation over time)
+
+**References**
+
+- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
+- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
+- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
+- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
+- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
+
+
+## Edited for time
 
 
 ## Nonlinear Effects
@@ -644,60 +631,111 @@ cbind(obs = homes$totalvalue[h], fit = exp(fitted(nlm3)[h]))
 
 ## YOUR TURN #5
 
-1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `finsqft`and `cooling`. Call your model `nlm4`.
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
 
-```{r}
-nlm4 <- lm(log(totalvalue) ~ ns(finsqft, df = 5) + cooling + 
-             ns(finsqft, df = 5):cooling, data = homes)
-```
 
 2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
-
-```{r}
-anova(nlm4)
-```
 
 
 3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
 
-```{r}
-plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "cooling")))
-```
-
 4. Check the graphical model assumptions using the `plot` function.
 
-```{r}
-plot(nlm4)
-```
 
 
 5. How well does the distribution of the model-generated data match the distribution of the observed data?
 
+
+## ggplot2 code for creating plot of simulated data
+
+Here's how to make the simulation plot using ggplot2. I find base R graphics easier for this type of plot. 
+
 ```{r}
-sim5 <- simulate(nlm4, nsim = 50)
-plot(density(log(homes$totalvalue)))
-for(i in 1:50)lines(density(sim5[[i]]), col = "grey80")
+library(ggplot2)
+library(tidyr)
+sim1 %>% 
+  pivot_longer(everything(), 
+               names_to = "simulation", 
+               values_to = "totalvalue") %>% 
+  ggplot() +
+  geom_density(mapping = aes(x = totalvalue, group = simulation),
+               color = "grey80") + 
+  geom_density(mapping = aes(x = totalvalue),
+               data = homes)  
+
 ```
 
-## Wrap-up
 
-This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works.
+## How to make a function for simulating and plotting data for a linear model
 
-What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
+**Base R**
 
-Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
+We basically copy and paste the original code in between the curly braces of the `function()` function. We call the function `plot_sims` but you can name it whatever you like. The changes are to the model name and number of simulations. We generalize those with arguments: `mod` and `nsim`. When we fit a model with `lm`, the data is stored with the model object by default and can be accessed as mod$model. The first column contains the model response, so we can access it with `[,1]` and use it to draw the density of the observed data.
 
-- generalized linear models (for binary and count responses)
-- multinomial logit models (for categorical responses)
-- ordered logit models (for ordered categorical responses)
-- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject)
-- survival models (for responses that measure time to an event)
-- time series models (for responses that exhibit, say, seasonal variation over time)
 
-**References**
+```{r}
 
-- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
-- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
-- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
-- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
-- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
+# ORIGINAL CODE
+
+# sim1 <- simulate(mod, nsim = 50)
+# plot(density(homes$totalvalue))
+# for(i in 1:50)lines(density(sim1[[i]]), col = "grey80")
+
+plot_sims <- function(mod, nsim){
+  sim1 <- simulate(mod, nsim = nsim)
+  plot(density(mod$model[,1]))
+  for(i in 1:nsim)lines(density(sim1[[i]]), col = "grey80")
+}
+# try the function
+plot_sims(m1, nsim = 20)
+```
+
+**ggplot2**
+
+Same idea as the previous function: we want to copy the original code in between the curly braces of the `function()` function. Except we now want to preface functions with their package name (eg, ggplot2::) so we can use the function without having the packages loaded. We also do away with the pipe `%>%` since it comes from yet another package (magrittr) but is accessible when tidyr is loaded. We extract the name of the response using `resp <- names(mod$model)[1]` and then use the use the `.data` pronoun (`.data[[resp]]`) from rlang package to use it with ggplot.
+
+
+```{r}
+## ORIGINAL CODE
+
+# library(ggplot2)
+# library(tidyr)
+
+# sim1 <- simulate(mod, nsim = 50)
+# sim1 %>% 
+#   pivot_longer(everything(), 
+#                names_to = "simulation", 
+#                values_to = "totalvalue") %>% 
+#   ggplot() +
+#   geom_density(mapping = aes(x = totalvalue, group = simulation),
+#                color = "grey80") + 
+#   geom_density(mapping = aes(x = totalvalue),
+#                data = homes) 
+
+plot_sims <- function(mod, nsim){
+  sim1 <- simulate(mod, nsim = nsim)
+  resp <- names(mod$model)[1]
+  sim1 <- tidyr::pivot_longer(sim1, everything(), 
+               names_to = "simulation", 
+               values_to = "totalvalue") 
+  ggplot2::ggplot() +
+  ggplot2::geom_density(mapping = ggplot2::aes(x = totalvalue, 
+                                               group = simulation), 
+                        color = "grey80", 
+                        data = sim1) + 
+  ggplot2::geom_density(mapping = ggplot2::aes(x = .data[[resp]]),
+                        data = mod$model)  
+}
+
+plot_sims(m1, nsim = 65)
+
+```
+
+Finally, the bayesplot package has a function for this called `ppc_dens_overlay`, but it's a little weird to use for linear models because it was designed to be used with Bayesian models. However it's not that hard to deploy. The first argument is simply the observed data. The second argument expects the simulations per row as opposed to per column. So we need to transpose, which we can do with the `t` function. The result is a clean plot with the y-axis unlabeled since it really isn't needed and a legend to distinguish between observed and simulated (or replicated) data. 
+
+```{r}
+# install.packages("bayesplot")
+library(bayesplot)
+ppc_dens_overlay(homes$totalvalue, t(sim1))
+```
+
