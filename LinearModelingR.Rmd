@@ -17,7 +17,7 @@ R code needs to be in "chunks" for it to work. Below is an example of an R code 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter* (Win/Linux) or *Cmd+Shift+Return* (Mac). 
 
 ```{r}
-x <- seq(-1,1,by = 0.01)
+x <- seq(-1, 1, by = 0.01)
 y <- x^2
 plot(x, y, type = "l")
 ```
@@ -42,7 +42,7 @@ Below we assign to `x` the values 1 - 25. Then we generate `y` as a function of 
 
 ```{r}
 x <- 1:25
-y <- 10 + 5*x  # y = mx + b
+y <- 10 + 5*x  # formula for a line
 d <- data.frame(x, y)
 plot(y ~ x, data = d)
 ```
@@ -68,9 +68,9 @@ This data is the combination of two parts:
 1. 10 + 5*x
 2. rnorm(n = 25, mean = 0, sd = 10)
 
-What if we were given this data and told to determine the process that generated it? In other words, fill in the blanks:
+What if we were given this data and told to determine the process that generated it? In other words, work backwards and fill in the blanks:
 
-1. ___________
+1. __ + __*x
 2. rnorm(n = 25, mean = 0, sd = ____)
 
 _That's basically what linear modeling/regression is_. You have some numeric response (or dependent) variable, and you want to find the model (or the formula) that generated the data. 
@@ -84,9 +84,9 @@ Traditional linear modeling/multiple regression assumes the following (among oth
 Linear modeling tries to recover the weights in the first assumption (10 and
 5) and the standard deviation in the 3rd assumption (10).
 
-Let's attempt to recover the data generating process. For this we use the `lm()` function. We have to specify the formula for the first assumption. The 2nd and 3rd assumptions are built into `lm()`.
+Let's attempt to recover the data generating process for our data. For this we use the `lm()` function. We have to specify the formula for the first assumption. The 2nd and 3rd assumptions are built into `lm()`.
 
-"y ~ x" means we think the model is "y = intercept + slope*x". (Unless we specify otherwise, this assumes we want to estimate an intercept.) This tells `lm()` to take our data and find the best intercept and slope. Notice this is the correct model! 
+The formula "y ~ x" means we think the model is "y = intercept + slope*x". (Unless we specify otherwise, this assumes we want to estimate an intercept.) This tells `lm()` to take our data and find the best intercept and slope. Notice this is the correct model! 
 
 When you use `lm` you'll usually want to save the results to an object. Below I save it to "mod". Then we view the results of the model using `summary()`
 
@@ -113,7 +113,6 @@ We could use those estimates to generate data and see if they look similar to ou
 
 ```{r}
 y2 <- 11.135 + 5.042*d$x + rnorm(25, 0, 9.7)
-# y2 <- coef(mod)[1] + coef(mod)[2]*d$x + rnorm(25, 0, sigma(mod))
 plot(y ~ x, data = d)
 points(d$x, y2, col = "red")
 ```
@@ -149,11 +148,12 @@ The expected mean of `y` when `x` = 10 is about 61.6 with a 95% CI of (57.2, 65.
 2. determine if the model is good and that assumptions hold
 3. use the model to explain relationships or make predictions
 
-## YOUR TURN #1
+## CODE ALONG #1
 
 Let's see what happens when we fit a bad model. Below we add a new column to data frame `d` named `z`, which is a random sample of numbers on the range of 0 to 1. `runif()` samples numbers from a uniform distribution.
 
 ```{r}
+set.seed(4)
 d$z <- runif(25)
 ```
 
@@ -164,7 +164,6 @@ d$z <- runif(25)
 
 
 3. Compare the smooth densities of `d$y` and `y3`. 
-
 
 
 
@@ -208,7 +207,7 @@ Variable name definitions:
 
 Let's say we want to model the mean total value of a home as a function of various characteristics such as lot size, finished square feet, presence of central air, etc.
 
-We have to propose a linear model. Unlike the previous example this is not simulated data for which we know the data generating process. How to propose a model? It really helps to have some subject knowledge expertise. 
+We have to propose a linear model. Unlike the previous example this is not simulated data for which we know the data generating process. How to propose a model? It helps to have some subject matter expertise. 
 
 Let's fit a linear model using finsqft, bedrooms and lotsize. The plus (+) sign means "include" in model.
 
@@ -231,7 +230,7 @@ Some naive interpretation:
 - each additional bedroom drops the price by $13,218 (?)
 - each additional lot size acre adds about $4268 to price
 
-Remember, the interpretation assumes all other variables are held constant! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense?
+Remember, the interpretation assumes all other variables are held constant! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
 
 Is this a "good" model? There are many statistical metrics to help evaluate this, such as R-squared. But let's simulate data from the model and compare it to our observed data. A "good" model should generate data that looks similar to the original data. 
 
@@ -440,7 +439,7 @@ In our model above that included `hsdistrict` we assumed the effects were _addit
 
 Interactions allow the effects of variables to depend on other variables. Again subject matter knowledge helps with the proposal of interactions. As we'll see interactions make your model more flexible but harder to understand.
 
-R makes it simple to include interactions in models. Just indicate an interaction between two variables by placing a colon (:) between them. Below we include 2-way interactions. (You can have 3-way and higher interactions but they're really difficult to interpret.)
+R makes it simple to include interactions in models. Just indicate an interaction between two variables by placing a colon (:) between them. Below we include 2-way interactions. (You can have 3-way and higher interactions but they're very difficult to interpret.)
 
 ```{r}
 m6 <- lm(log(totalvalue) ~ fullbath + finsqft + hsdistrict + 
