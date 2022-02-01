@@ -245,7 +245,7 @@ Some naive interpretation:
 - each additional bedroom drops the price by $13,218 (?)
 - each additional lot size acre adds about $4268 to price
 
-Remember, the interpretation assumes all other variables are held constant! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
+Remember, the interpretation assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
 
 Is this a "good" model? There are many statistical metrics to help evaluate this, such as R-squared. But let's simulate data from the model and compare it to our observed data. A "good" model should generate data that looks similar to the original data. 
 
@@ -345,21 +345,34 @@ for(i in 1:50)lines(density(sim2[[i]]), lty = 2, col = "grey80")
 
 This doesn't look too bad!
 
-Let's say we're happy with this model. How to interpret? The response is log transformed, so interpretation of coefficients changes. We first need to _exponentiate_ and then interpret the effect as _multiplicative_ instead of additive. Below we exponentiate using the `exp` function and then round to 4 decimal places.
+Let's say we're happy with this model. How do we interpret the coefficients? Since the response is log transformed, we interpret the coefficients as approximate proportional differences. Below we view the coefficients rounded to 4 decimal places.
+
+
+```{r}
+round(coef(m2), 4)
+```
+
+These are proportions. To get percentages, multiply by 100.
+
+```{r}
+round(coef(m2), 4) * 100
+```
+
+Some naive interpretations:
+
+- each additional finished square foot increases price by 0.05%. Or divide by 100 to get each additional 100 finished square feet increases price by 5%.
+- each additional bedroom increases price by about 4.3%
+- each additional lot size acre increases price by about 0.47%
+
+Remember, the interpretation assumes _all other variables are held constant_! 
+
+A slightly more precise estimation can be obtained by _exponentiating_ the coefficients and then interpreting the effects as _multiplicative_ instead of additive. Below we exponentiate using the `exp` function and then round to 4 decimal places.
 
 ```{r}
 round(exp(coef(m2)), 4) 
 ```
 
-
-Some naive interpretations:
-
-- each additional finished square foot increases price by 0.05%. Or divide by 100 to get each additional 100 finished square feet increases price by 5%.
-  _NOTE: Multiplying a value by 1.0005 is the same as adding 0.05% to the value. Likewise, multiplying a value by 1.05 is the same as adding 5% to the value._
-- each additional bedroom increases price by about 4.4%
-- each additional lot size acre increases price by about 0.47%
-
-Again, these relationships assume all other variables are held constant.
+For example, each additional bedroom (assuming all else held constant) increases expected total price by about 4.39%. Multiplying by 1.0439 is equivalent to adding 4.39%.
 
 Let's review the summary output:
 
