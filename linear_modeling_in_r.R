@@ -1,7 +1,7 @@
 #' ---
 #' title: "Linear Modeling with R"
 #' author: "Clay Ford, UVA Library StatLab"
-#' date: "Spring 2020"
+#' date: "Spring 2022"
 #' ---
 #' 
 
@@ -83,14 +83,12 @@ plot(x, y)
 points(x, y2, col = "red")
 
 # We could also add the original and fitted lines
-abline(a = 10, b = 5)
-abline(mod, col = "red")
+# abline() plots a line with intercept "a" and slope "b"
+abline(a = 10, b = 5) # original
+abline(mod, col = "red") # fitted
 
-# We could also compare distributions using histograms
-hist(y, main = "observed data")
-hist(y2, main = "data simulated from model")
-
-# or density curves (smooth version of histograms)
+# We could also compare distributions using density curves (smooth version of
+# histograms)
 plot(density(y))
 lines(density(y2), col = "red")
 
@@ -173,7 +171,7 @@ plot(eff, add.data = TRUE)
 mod3 <- lm(y ~ gender + score, data = dat)
 summary(mod3)
 
-# Compare simulated data to oberserved data; not good!
+# Compare simulated data to observed data; not good!
 sim_y <- simulate(mod3)
 plot(density(dat$y))
 lines(density(sim_y$sim_1), col = "red")
@@ -211,8 +209,7 @@ df <- data.frame(y, x1, x2)
 
 # We are interested in predicting home sales prices as a function of various
 # characteristics.
-sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv",
-                  stringsAsFactors = FALSE)
+sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_estate_sales.csv")
 
 # price - sale price in dollars (our response/dependent variable)
 # finsqft - finished square feet
@@ -227,7 +224,6 @@ sales <- read.csv("https://github.com/clayford/LinearModelingR/raw/master/real_e
 
 # glance at data
 str(sales)
-summary(sales)
 
 # Make categorical variables Factors;
 # mutate_if: if variable is character, make it a factor
@@ -423,7 +419,8 @@ coef(sales_mod4) %>% exp() %>% round(3)
 # Use the colon to specify interactions on an individual basis.
 # Example: finsqft:bedroom
 # Does the effect of finsqft depend on whether or not you're near a highway?
-sales_mod5 <- lm(log(price) ~ finsqft + bedrooms + lotsize + bathrooms + garagesize +
+sales_mod5 <- lm(log(price) ~ finsqft + bedrooms + lotsize + 
+                   bathrooms + garagesize +
                    quality + highway + finsqft:bedrooms, data = sales)
 summary(sales_mod5)
 
@@ -453,12 +450,14 @@ plot(ggpredict(sales_mod5, terms = c("finsqft", "bedrooms[1, 3, 5]")),
 plot(ggpredict(sales_mod5, terms = c("bedrooms", "finsqft")))
 
 # again we can set the values of finsqft
-p <- plot(ggpredict(sales_mod5, terms = c("bedrooms", "finsqft[1500, 2000, 2500]")))
+p <- plot(ggpredict(sales_mod5, 
+                    terms = c("bedrooms", "finsqft[1500, 2000, 2500]")))
 p
 # At 2500 finished sq feet number of bedrooms doesn't really seem to matter,
 
 # The ggpredict() result can be saved and used as a data frame with ggplot
-eff_out <- ggpredict(sales_mod5, terms = c("bedrooms", "finsqft[1500, 2000, 2500]"))
+eff_out <- ggpredict(sales_mod5, 
+                     terms = c("bedrooms", "finsqft[1500, 2000, 2500]"))
 names(eff_out)
 eff_out <- eff_out %>% 
   rename(`Fin Sq Ft`=group)
@@ -468,10 +467,8 @@ ggplot(eff_out, aes(x = x, y = predicted, color = `Fin Sq Ft`)) +
               alpha = 1/5)
   
 
-
 # When should you include interactions? What kind? How many? That requires some
 # thought and expertise in the subject.
-
 
 
 # YOUR TURN #4 ------------------------------------------------------------
@@ -560,19 +557,21 @@ cor(ns_out[,1], ns_out[,2])
 # can help. Also called term plots and component-residual plots. We'll use the
 # crPlots() function from the car package.
 
-sales_mod6 <-  lm(log(price) ~ finsqft + bedrooms + bathrooms + garagesize + lotsize, 
+sales_mod6 <-  lm(log(price) ~ finsqft + bedrooms + bathrooms + 
+                    garagesize + lotsize, 
                   data = sales)
 
 # Notice we specify the numeric variables just as we would in a model
-crPlots(sales_mod6, terms = ~ finsqft + bedrooms + bathrooms + garagesize + lotsize)
+crPlots(sales_mod6, terms = ~ finsqft + bedrooms + 
+          bathrooms + garagesize + lotsize)
 crPlots(sales_mod6, terms = ~ finsqft)
 
 # Partial-residual plots show the relationship between a predictor and the
 # response variable given that the other predictors are also in the model.
 
-# The blue dashed line is the fitted slope.
-# The purple line is a smooth trend line.
-# A curving purple line indicates a non-linear effect may warrant a non-linear effect.
+# The blue dashed line is the fitted slope. The purple line is a smooth trend
+# line. A curving purple line indicates a non-linear effect may warrant a
+# non-linear effect.
 
 # Let's fit a non-linear effect for finsqft using a natural spline with 3 DF.
 sales_mod7 <-  lm(log(price) ~ ns(finsqft, df = 3) + bedrooms + lotsize +
