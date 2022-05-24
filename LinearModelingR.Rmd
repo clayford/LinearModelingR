@@ -103,7 +103,7 @@ The model returns the following estimates:
 
 These are pretty close to the "true" values of 10, 5, and 10 we used to generate the data.  
 
-**In real life, we DO NOT KNOW the formula is part 1. The real data generation process will be far more complicated. The formula we propose will just be an approximation and may not be good.**
+**In real life, we DO NOT KNOW the formula in part 1. The real data generation process will be far more complicated. The formula we propose will just be an approximation and may not be good.**
 
 **In real life, we DO NOT KNOW if the Normality assumption or constant variance assumption of the noise is plausible.**
 
@@ -561,7 +561,9 @@ Clearly a straight-line model will not work for this data. The relationship betw
 
 If we wanted to try to "recover" the weights we used in simulating this data we could fit a polynomial model:
 
+
 ```
+# Example code, do not run
 nlm1 <- lm(y ~ poly(x, degree = 2, raw = TRUE), data = nl_dat)
 ```
 
