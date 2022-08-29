@@ -63,27 +63,27 @@ d$y <- 10 + 5*x + noise
 plot(y ~ x, data = d)
 ```
 
-Now y appears to be associated with x, but not completely determined by x.
+Now y appears to be _associated_ with x, but not completely determined by x.
 
 y is the combination of two parts:
 
-1. 10 + 5*x
-2. rnorm(n = 25, mean = 0, sd = 10)
+1. y = 10 + 5*x + noise
+2. noise = rnorm(n = 25, mean = 0, sd = 10)
 
 What if we were given this data and told to determine the process that generated it? In other words, work backwards and fill in the blanks:
 
 1. y = __ + __*x
-2. rnorm(n = 25, mean = 0, sd = ____)
+2. noise = rnorm(n = 25, mean = 0, sd = ____)
 
 _That's one way to think of linear modeling/regression_. You have some numeric response (or dependent) variable, and you want to find the model (or the formula) that generated the data. 
 
 Traditional linear modeling/multiple regression assumes the following (among others):
 
-1. the formula is a weighted sum of predictors (eg, y = 10 + 5*x)
+1. the formula is a _weighted sum_ of predictors (eg, y = 10 + 5*x)
 2. the noise is a random draw from a Normal distribution with mean = 0
 3. the standard deviation of the Normal distribution is constant (eg, 10)
 
-Linear modeling tries to recover the weights in the first assumption and the standard deviation in the 3rd assumption.
+Linear modeling tries to recover the weights in the first assumption and the standard deviation in the third assumption.
 
 Let's attempt to recover the data generating process for our data. For this we use the `lm()` function. We have to specify the formula for the first assumption. The 2nd and 3rd assumptions are built into `lm()`.
 
@@ -100,7 +100,7 @@ summary(mod)
 The model returns the following estimates:
 
 1. y = 11.135 + 5.042 * x
-2. rnorm(n = 25, mean = 0, sd = 9.7)
+2. noise = rnorm(n = 25, mean = 0, sd = 9.7)
 
 These are pretty close to the "true" values of 10, 5, and 10 we used to generate the data.  
 
@@ -113,9 +113,10 @@ How can we evaluate our model formula?
 We could use our model estimates to generate data and see if they look similar to our original data. (Run entire chunk at once.)
 
 ```{r}
+# d$y <- 10 + 5*x + noise
 d$y2 <- 11.135 + 5.042*d$x + rnorm(25, 0, 9.7)
-plot(y ~ x, data = d)
-points(d$x, d$y2, col = "red")
+plot(y ~ x, data = d) # original data
+points(d$x, d$y2, col = "red") # simulated data
 ```
 
 That looks pretty good! Our model-generated data appears similar to our observed data.
@@ -124,9 +125,9 @@ We could also compare smooth density curves of the original and model-generated 
 
 ```{r}
 hist(d$y, freq = FALSE) # freq = FALSE means area of bars sums to 1
-lines(density(d$y))
+lines(density(d$y))  # original data
 d$y2 <- 11.135 + 5.042*d$x + rnorm(25, 0, 9.7)
-lines(density(d$y2), col = "red")
+lines(density(d$y2), col = "red")  # simulate data
 ```
 
 This looks good as well. The distribution of our model-generated data is very similar to our observed data. You should do this more than once, say 50 times, to ensure the model consistently generates data similar to the observed data. We show one way to do that later in the workshop.
@@ -137,7 +138,7 @@ Since we think our model is "good", we might use it to make a prediction. For ex
 predict(mod, newdata = data.frame(x = 10), interval = "confidence")
 ```
 
-The expected mean of y when x = 10 is about 61.6 with a 95% CI of (57.2, 65.9). The CI gives us some notion of how uncertain this expected mean is. 
+The expected mean of y when x = 10 is about 61.6 with a 95% CI of (57.2, 65.9). The CI gives us some notion of how uncertain this expected mean is. In fact it would be better to report this as, "the expected mean of y when x = 10 is about 57 to 66."
 
 We might also try to summarize the relationship between y and x by examining the coefficients (or weights) in the summary output. We can extract the coefficients from the summary with the `coef()` function:
 
@@ -162,24 +163,30 @@ set.seed(4)
 d$z <- runif(25, min = -100, max = 100)
 ```
 
+REMINDER: Add a new R code chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I* (Win/Linux) or *Cmd+Option+I* (Mac). 
+
 1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called `mod2`. View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
 
+```{r}
+mod2 <- lm(y ~ z, data = d)
+summary(mod2)
+```
 
 
-2. Use the summary results to generate a new set of data and name it "y3", similar to how we generated "y2" above.
+2. Use the model to simulate density histograms and compare to the original density histogram of `d$y`.
 
-
-
-3. Compare scatterplots of x vs y and x vs y3, similar to what we did above using the `plot()` and `points()` functions. 
-
-
+```{r}
+hist(d$y, freq = FALSE)
+lines(density(d$y))
+lines(density(73.0003 + d$z*0.2312 + rnorm(25, 0, sd = 36.36)), col = "red")
+```
 
 
 Let's do some linear modeling with real data. 
 
 ## Import data
 
-Let's import the data we'll be using today. The data we'll work with is Albemarle County real estate data which was downloaded from the Office of Geographic Data Services. We'll use a random sample of the data.
+Let's import the data we'll be using today. The data we'll work with is Albemarle County real estate data which was downloaded from the Office of Geographic Data Services. We'll use a _random sample_ of the data.
 
 ```{r}
 URL <- 'https://raw.githubusercontent.com/clayford/dataviz_with_ggplot2/master/alb_homes.csv'
@@ -404,15 +411,34 @@ According to our model, each additional bedroom adds between 2% and 6% to the va
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath` and `finsqft.` Call your model `m3`
 
+```{r}
+m3 <- lm(log(totalvalue) ~ fullbath + finsqft, data = homes)
+```
+
 
 2. Insert a code chunk below and check the diagnostic plots
+
+```{r}
+plot(m3)
+```
 
 
 
 3. How do we interpret the fullbath coefficient?
 
+```{r}
+round(exp(coef(m3)), 3)
+```
+
 
 4. Insert a code chunk below and simulate data from the model and compare to the observed `totalvalue`. Does this look like a good model?
+
+
+```{r}
+sim_m3 <- simulate(m3, nsim = 50)
+plot(density(log(homes$totalvalue)))
+for(i in 1:50)lines(density(sim_m3[[i]]), lty = 2, col = "grey80")
+```
 
 
 ## Categorical predictors
@@ -438,7 +464,7 @@ A model with `hsdistrict` will have two coefficients: `Monticello` and  `Western
 - a home in Western Albemarle HS district gets a one in the West Alb column
 
 
-Let's fit our new model. (Our model may not be right.)
+Let's fit our new model.
 
 ```{r}
 m4 <- lm(log(totalvalue) ~ fullbath + finsqft + hsdistrict, data = homes)
@@ -457,8 +483,16 @@ It appears that the value of a home in Western Albemarle will be about 10% highe
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft` and `cooling.` Call your model `m5`. 
 
+```{r}
+m5 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling, data = homes)
+```
 
-2. What is the interpretation of cooling? What is the baseline or reference level?
+
+2. What is the interpretation of cooling? 
+
+```{r}
+round(exp(coef(m5)), 3)
+```
 
 
 
@@ -479,13 +513,19 @@ summary(m6)
 
 Interpretation is now much more difficult. We cannot directly interpret the _main effects_ of `fullbath`, `finsqft` or `hsdistrict`. They interact. What's the effect of `finsqft`? It depends on `fullbath` and `hsdistrict`. 
 
-Are the interactions "significant" or necessary? Use the `anova` function to evaluate this question:
+Are the interactions "significant" or necessary? We can use the `anova` function to evaluate this question. This runs a series of partial F-tests. Each row below is a hypothesis test. The null is the model with this predictor is the same as the model without the predictor. The anova tests below use what are called Type I sums of squares. This respects the order of the variables in the model. So...
+
+- the first test compares a model with just an intercept to a model with an intercept and fullbath.
+- the second test compares a model with an intercept and fullbath to a model with an intercept, fullbath and finsqft.
+- And so on.
+
+If the null is true, the F value should be close to 1.
 
 ```{r}
 anova(m6)
 ```
 
-The interaction `finsqft:hsdistrict` doesn't appear to contribute much to the model given that everything else above it is in the model.
+The interaction `finsqft:hsdistrict` doesn't appear to contribute much to the model given that _everything else above it_ is in the model.
 
 Just because an interaction is significant doesn't necessarily mean it's interesting or worthwhile. Nor can we infer anything about the nature of the interaction from the ANOVA table.
 
@@ -514,7 +554,7 @@ plot(ggpredict(m6, terms = c("fullbath[1:5]", "hsdistrict"),
           condition = c(finsqft = 2000)))
 ```
 
-What about the effects of `finsqft` and `fullbath`? This is an interaction of two numeric variables. The second variable has to serve as a grouping variable when creating an effect plot. Below we set `fullbath` to take values 2 - 5 and `finsqft` to take values of 1000 - 4000 in steps of 500.
+What about the effects of `finsqft` and `fullbath`? This is _an interaction of two numeric variables_. The second variable has to serve as a grouping variable when creating an effect plot. Below we set `fullbath` to take values 2 - 5 and `finsqft` to take values of 1000 - 4000 in steps of 500.
 
 ```{r}
 # plot(ggpredict(m6, terms = c("finsqft", "fullbath")))
@@ -527,9 +567,20 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft`, `cooling`, and the interaction of `finsqft` and `cooling`. Call your model `m7`. Is the interaction warranted?
 
+```{r}
+m7 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling + finsqft:cooling, 
+        data = homes)
+anova(m7)
+```
 
 
-2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis.
+
+2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis. How notable is this interaction?
+
+
+```{r}
+plot(ggpredict(m7, terms = c("finsqft[1000:4000 by=500]", "cooling")))
+```
 
 
 ## Wrap-up
@@ -593,11 +644,13 @@ Let's see how it works with our simulated data.
 ```{r}
 library(splines)
 nlm2 <- lm(y ~ ns(x, df = 2), data = nl_dat)
+summary(nlm2)
 ```
 
 Here's one way to see the fitted line.
 
 ```{r}
+library(ggeffects)
 plot(ggpredict(nlm2, terms = "x"), add.data = TRUE)
 ```
 
@@ -640,7 +693,7 @@ plot(density(log(homes$totalvalue)))
 for(i in 1:50)lines(density(sim4[[i]]), col = "grey80")
 ```
 
-We should still check model assumptions of constant variance and normal residuals.
+We should still check model assumptions.
 
 ```{r}
 plot(nlm3)
@@ -656,25 +709,51 @@ homes[h,c("totalvalue", "finsqft", "lotsize")]
 Homes 12 and 40 are very low in totalvalue and the model way overpredicts their values. Home 963 has a massive totalvalue with 0 acres of lotsize. Home 1810 is on 611 acres and that value has a high leverage on its fitted value. 
 
 ```{r}
-cbind(obs = homes$totalvalue[h], fit = exp(fitted(nlm3)[h]))
+cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 ```
 
 
 ## CODE ALONG 5
 
-1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `hsdistrict`, and the interaction of `hsdistrict` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
+
+```{r}
+nlm4 <- lm(log(totalvalue) ~ ns(finsqft, df = 5) + hsdistrict + 
+             ns(finsqft, df = 5):hsdistrict, data = homes)
+```
 
 
 2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
 
+```{r}
+anova(nlm4)
+```
 
-3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
+
+3. Create an effect plot of `finsqft` by `hsdistrict`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`. 
+
+```{r}
+plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "hsdistrict")))
+```
+
 
 4. Check the graphical model assumptions using the `plot` function.
+
+```{r}
+plot(nlm4)
+```
 
 
 
 5. How well does the distribution of the model-generated data match the distribution of the observed data?
+
+```{r}
+sim_nlm <- simulate(nlm4, nsim = 50)
+plot(density(log(homes$totalvalue)))
+for(i in 1:50)lines(density(sim_nlm[[i]]), col = "grey80")
+
+```
+
 
 
 ## ggplot2 code for creating plot of simulated data
@@ -682,16 +761,17 @@ cbind(obs = homes$totalvalue[h], fit = exp(fitted(nlm3)[h]))
 Here's how to make the simulation plot using ggplot2. I find base R graphics easier for this type of plot. 
 
 ```{r}
+sim2 <- simulate(m2, nsim = 50)
 library(ggplot2)
 library(tidyr)
-sim1 %>% 
+sim2 %>% 
   pivot_longer(everything(), 
                names_to = "simulation", 
                values_to = "totalvalue") %>% 
   ggplot() +
   geom_density(mapping = aes(x = totalvalue, group = simulation),
                color = "grey80") + 
-  geom_density(mapping = aes(x = totalvalue),
+  geom_density(mapping = aes(x = log(totalvalue)),
                data = homes)  
 
 ```
@@ -705,20 +785,13 @@ We basically copy and paste the original code in between the curly braces of the
 
 
 ```{r}
-
-# ORIGINAL CODE
-
-# sim1 <- simulate(mod, nsim = 50)
-# plot(density(homes$totalvalue))
-# for(i in 1:50)lines(density(sim1[[i]]), col = "grey80")
-
 plot_sims <- function(mod, nsim){
-  sim1 <- simulate(mod, nsim = nsim)
+  sim <- simulate(mod, nsim = nsim)
   plot(density(mod$model[,1]))
-  for(i in 1:nsim)lines(density(sim1[[i]]), col = "grey80")
+  for(i in 1:nsim)lines(density(sim[[i]]), col = "grey80")
 }
 # try the function
-plot_sims(m1, nsim = 20)
+plot_sims(mod = m2, nsim = 20)
 ```
 
 **ggplot2**
@@ -758,7 +831,7 @@ plot_sims <- function(mod, nsim){
                         data = mod$model)  
 }
 
-plot_sims(m1, nsim = 65)
+plot_sims(m2, nsim = 65)
 
 ```
 
@@ -767,6 +840,6 @@ Finally, the bayesplot package has a function for this called `ppc_dens_overlay`
 ```{r}
 # install.packages("bayesplot")
 library(bayesplot)
-ppc_dens_overlay(homes$totalvalue, t(sim1))
+ppc_dens_overlay(log(homes$totalvalue), t(sim2))
 ```
 

@@ -1,0 +1,91 @@
+Code along answers
+
+## CODE ALONG 1
+
+1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called `mod2`. View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
+
+mod2 <- lm(y ~ z, data = d)
+summary(mod2)
+
+2. Use the model to simulate density histograms and compare to the original density histogram of `d$y`.
+
+hist(d$y, freq = FALSE)
+lines(density(d$y))
+lines(density(73.0003 + d$z*0.2312 + rnorm(25, 0, sd = 36.36)), col = "red")
+
+
+
+## CODE ALONG 2
+
+1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath` and `finsqft.` Call your model `m3`
+
+m3 <- lm(log(totalvalue) ~ fullbath + finsqft, data = homes)
+
+2. Insert a code chunk below and check the diagnostic plots
+
+plot(m3)
+
+3. How do we interpret the fullbath coefficient?
+
+round(exp(coef(m3)), 3)
+
+Adding a full bath increases value of house by about 17% 
+
+4. Insert a code chunk below and simulate data from the model and compare to the observed `totalvalue`. Does this look like a good model?
+
+sim_m3 <- simulate(m3, nsim = 50)
+plot(density(log(homes$totalvalue)))
+for(i in 1:50)lines(density(sim_m3[[i]]), lty = 2, col = "grey80")
+
+
+## CODE ALONG 3
+
+1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft` and `cooling.` Call your model `m5`. 
+
+m5 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling, data = homes)
+
+2. What is the interpretation of cooling? 
+
+round(exp(coef(m5)), 3)
+
+Expected value of a home with No Central Air is about 19-20% lower than an equivalent home with Central Air.
+
+
+## CODE ALONG 4
+
+1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft`, `cooling`, and the interaction of `finsqft` and `cooling`. Call your model `m7`. Is the interaction warranted?
+
+m7 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling + finsqft:cooling, 
+        data = homes)
+anova(m7)
+
+2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis.
+
+plot(ggpredict(m7, terms = c("finsqft[1000:4000 by=500]", "cooling")))
+
+
+## CODE ALONG 5
+
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
+
+nlm4 <- lm(log(totalvalue) ~ ns(finsqft, df = 5) + hsdistrict + 
+             ns(finsqft, df = 5):hsdistrict, data = homes)
+
+
+2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
+
+anova(nlm4)
+
+3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
+
+plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "hsdistrict")))
+
+4. Check the graphical model assumptions using the `plot` function.
+
+plot(nlm4)
+
+5. How well does the distribution of the model-generated data match the distribution of the observed data?
+
+sim_nlm <- simulate(nlm4, nsim = 50)
+plot(density(log(homes$totalvalue)))
+for(i in 1:50)lines(density(sim_nlm[[i]]), col = "grey80")
