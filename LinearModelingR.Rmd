@@ -628,6 +628,7 @@ Clearly a straight-line model will not work for this data. The relationship betw
 
 If we wanted to try to "recover" the weights we used in simulating this data we could fit a polynomial model:
 
+
 ```
 ## EXAMPLE CODE; NOT INTENED TO BE RUN
 nlm1 <- lm(y ~ poly(x, degree = 2, raw = TRUE), data = nl_dat)
