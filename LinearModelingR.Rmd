@@ -167,19 +167,10 @@ REMINDER: Add a new R code chunk by clicking the *Insert Chunk* button on the to
 
 1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called `mod2`. View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
 
-```{r}
-mod2 <- lm(y ~ z, data = d)
-summary(mod2)
-```
 
 
-2. Use the model to simulate density histograms and compare to the original density histogram of `d$y`.
+2. Use the model to simulate density histograms and compare to the original density histogram of `d$y`. Run the chunk several times to see how the model-generated density curve varies. 
 
-```{r}
-hist(d$y, freq = FALSE)
-lines(density(d$y))
-lines(density(73.0003 + d$z*0.2312 + rnorm(25, 0, sd = 36.36)), col = "red")
-```
 
 
 Let's do some linear modeling with real data. 
@@ -411,34 +402,18 @@ According to our model, each additional bedroom adds between 2% and 6% to the va
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath` and `finsqft.` Call your model `m3`
 
-```{r}
-m3 <- lm(log(totalvalue) ~ fullbath + finsqft, data = homes)
-```
-
 
 2. Insert a code chunk below and check the diagnostic plots
-
-```{r}
-plot(m3)
-```
 
 
 
 3. How do we interpret the fullbath coefficient?
 
-```{r}
-round(exp(coef(m3)), 3)
-```
 
 
 4. Insert a code chunk below and simulate data from the model and compare to the observed `totalvalue`. Does this look like a good model?
 
 
-```{r}
-sim_m3 <- simulate(m3, nsim = 50)
-plot(density(log(homes$totalvalue)))
-for(i in 1:50)lines(density(sim_m3[[i]]), lty = 2, col = "grey80")
-```
 
 
 ## Categorical predictors
@@ -483,16 +458,10 @@ It appears that the value of a home in Western Albemarle will be about 10% highe
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft` and `cooling.` Call your model `m5`. 
 
-```{r}
-m5 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling, data = homes)
-```
 
 
 2. What is the interpretation of cooling? 
 
-```{r}
-round(exp(coef(m5)), 3)
-```
 
 
 
@@ -567,20 +536,12 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `fullbath`, `finsqft`, `cooling`, and the interaction of `finsqft` and `cooling`. Call your model `m7`. Is the interaction warranted?
 
-```{r}
-m7 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling + finsqft:cooling, 
-        data = homes)
-anova(m7)
-```
 
 
 
 2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis. How notable is this interaction?
 
 
-```{r}
-plot(ggpredict(m7, terms = c("finsqft[1000:4000 by=500]", "cooling")))
-```
 
 
 ## Wrap-up
@@ -778,9 +739,97 @@ sim2 %>%
 ```
 
 
+## ANOVA revisited
+
+We can also use the `anova()` function to compare _nested models_. This means one model is a subset of another. For example, below we fit progressively more complicated models, building up to our model, `m2`: `log(totalvalue) ~ finsqft + bedroom + lotsize`
+
+```{r}
+mod_00 <- lm(log(totalvalue) ~ 1, data = homes) # intercept-only
+mod_01 <- lm(log(totalvalue) ~ finsqft, data = homes)
+mod_02 <- lm(log(totalvalue) ~ finsqft + bedroom, data = homes)
+mod_03 <- lm(log(totalvalue) ~ finsqft + bedroom + lotsize, data = homes)
+```
+
+The `anova()` function allows us to compare these nested models. The null hypothesis is that two models are the same, in the sense they explain the same amount of variance in the response variable, `log(totalvalue)`. A low p-value provides evidence that the more complicated model with more variables is a better model. The usual way to use `anova()` to compare models is to list the smaller models first. Below are three tests: 
+
+1. Model 2 vs Model 1
+2. Model 3 vs Model 2
+3. Model 4 vs Model 3
+
+The end result is that model 4 is superior to the other three models.
+
+```{r}
+anova(mod_00, mod_01, mod_02, mod_03)
+```
+
+Notice this identical to calling `anova()` on the full model.
+
+```{r}
+anova(m2)
+```
+
+Another approach is using Type II sums of squares, where each variable is tested assuming _all other variables are in the model_. One approach to performing this test is the `drop1()` function. The name comes from the fact we're dropping one variable at a time. The null hypothesis is dropping the variable from the model has no effect. A low p-value provides evidence against this hypothesis. Below each are three tests:
+
+1. Full model vs Full model without finsqft
+2. Full model vs Full model without bedroom
+3. Full model vs Full model without lotisze
+
+Each test is soundly rejected. The full model is much better with all three predictors.
+
+```{r}
+drop1(m2, test = "F")
+```
+
+This test is also implemented in the `Anova()` function in the car package.
+
+```{r}
+# install.packages("car")
+library(car)
+Anova(m2)
+```
+
+## AIC and BIC
+
+AIC (Akaike Information Criterion) is a statistic designed to help us choose a model with the best predictive power among a group of models. The value of  AIC doesn't really have any interpretation. It's meant to be compared to other AIC values. The lower the AIC the better. We can use the `AIC()` function in R to compare multiple models. For example, `mod_03` seems preferable to `mod_02` because the AIC value is so much smaller. 
+
+```{r}
+AIC(mod_02, mod_03)
+```
+
+AIC is the log-likelihood of the model multiplied by -2 with 2 x df added to it. The 2 x df part is a _penalty_. "df" is short for "degrees of freedom" and is the number of parameters estimated in the model. This includes the residual standard error. For example, `mod_03` has 5 degrees of freedom because there are 4 model coefficients and the residual standard error. We call this part a "penalty" because AIC can get bigger with more coefficients. 
+
+Log-likelihood is the log-transformed likelihood. _Likelihood_ is the joint probability of the observed data as a function of the parameters of the chosen statistical model. Imagine turning the coefficients in the model like dials on a machine and trying to find the maximum likelihood. In other words, what combination of coefficients are most likely to produce the data we observed? R does not estimate linear model coefficients using maximum likelihood, but we can calculate the log likelihood after the fact using the `logLik()` function:
+
+```{r}
+logLik(mod_03)
+```
+
+We can then calculate AIC "by-hand" as follows.
+
+```{r}
+rbind("mod_02" = -2*logLik(mod_02) + 2*4, 
+      "mod_03" = -2*logLik(mod_03) + 2*5)
+```
+
+The AIC is inclined to choose overly complex models, so some researchers prefer BIC (Bayesian Information Criterion), which places a bigger penalty on the number of predictors. Again use the `BIC()` function in the same way.
+
+```{r}
+BIC(mod_02, mod_03)
+```
+
+The BIC is calculated the same as the AIC but with a different penalty, `log(n)`, where n is the number of observations. Again we can calculate "by hand":
+
+```{r}
+rbind("mod_02" = -2*logLik(mod_02) + log(nrow(homes))*4, 
+      "mod_03" = -2*logLik(mod_03) + log(nrow(homes))*5)
+```
+
+Of course, you don't have to choose one. You can use both AIC and BIC and report both. They will often choose the same models. 
+
+
 ## How to make a function for simulating and plotting data for a linear model
 
-**Base R**
+**base R**
 
 We basically copy and paste the original code in between the curly braces of the `function()` function. We call the function `plot_sims` but you can name it whatever you like. The changes are to the model name and number of simulations. We generalize those with arguments: `mod` and `nsim`. When we fit a model with `lm`, the data is stored with the model object by default and can be accessed as mod$model. The first column contains the model response, so we can access it with `[,1]` and use it to draw the density of the observed data.
 
@@ -801,22 +850,6 @@ Same idea as the previous function: we want to copy the original code in between
 
 
 ```{r}
-## ORIGINAL CODE
-
-# library(ggplot2)
-# library(tidyr)
-
-# sim1 <- simulate(mod, nsim = 50)
-# sim1 %>% 
-#   pivot_longer(everything(), 
-#                names_to = "simulation", 
-#                values_to = "totalvalue") %>% 
-#   ggplot() +
-#   geom_density(mapping = aes(x = totalvalue, group = simulation),
-#                color = "grey80") + 
-#   geom_density(mapping = aes(x = totalvalue),
-#                data = homes) 
-
 plot_sims <- function(mod, nsim){
   sim1 <- simulate(mod, nsim = nsim)
   resp <- names(mod$model)[1]
@@ -836,11 +869,34 @@ plot_sims(m2, nsim = 65)
 
 ```
 
-Finally, the bayesplot package has a function for this called `ppc_dens_overlay`, but it's a little weird to use for linear models because it was designed to be used with Bayesian models. However it's not that hard to deploy. The first argument is simply the observed data. The second argument expects the simulations per row as opposed to per column. So we need to transpose, which we can do with the `t` function. The result is a clean plot with the y-axis unlabeled since it really isn't needed and a legend to distinguish between observed and simulated (or replicated) data. 
+**bayesplot package**
+
+The bayesplot package has a function for this called `ppc_dens_overlay`, but it's a little weird to use for linear models because it was designed to be used with Bayesian models. However it's not that hard to deploy. The first argument is simply the observed data. The second argument expects the simulations per row as opposed to per column. So we need to transpose, which we can do with the `t()` function. The result is a clean plot with the y-axis unlabeled since it really isn't needed and a legend to distinguish between observed and simulated (or replicated) data. 
 
 ```{r}
 # install.packages("bayesplot")
 library(bayesplot)
 ppc_dens_overlay(log(homes$totalvalue), t(sim2))
 ```
+
+
+**performance package**
+
+The easystats collection of packages "aims to provide a unifying and consistent framework to tame, discipline, and harness the scary R statistics and their pesky models." https://easystats.github.io/easystats/ One of the packages is called performance, which provides the `check_predictions()` function for simulating data from a model and comparing it to the distribution of the original data. Two potential drawbacks at the time of this writing:
+
+1. Can be slow for large data sets
+2. log transformed data needs to be added as a variable to the data and modeled directly, as opposing to doing it on-the-fly as `log(totalvalue)`
+
+Quick demo. Note the warning: "Minimum value of original data is not included in the replicated data." This says the model is not generating data as small as the smallest value in the original data, which is 9600.
+
+```{r}
+install.packages("performance")
+library(performance)
+
+# add log(totalvalue) to data and fit new model
+homes$logtotalvalue <- log(homes$totalvalue)
+m2a <- lm(logtotalvalue ~ finsqft + bedroom + lotsize, data = homes)
+check_predictions(m2a)
+```
+
 
