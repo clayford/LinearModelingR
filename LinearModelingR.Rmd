@@ -546,7 +546,7 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 ## Wrap-up
 
-This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works.
+This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
 
 What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
 
@@ -568,7 +568,7 @@ Things get more complicated when you have, say, binary responses or multiple mea
 - Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
 
 
-## Edited for time
+## Topics edited for time
 
 
 ## Nonlinear Effects
