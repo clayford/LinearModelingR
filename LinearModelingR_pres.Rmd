@@ -1,7 +1,6 @@
 ---
 title: "Linear Modeling with R"
 author: "Clay Ford"
-date: "Spring 2022"
 output: beamer_presentation
 ---
 
