@@ -568,7 +568,7 @@ Things get more complicated when you have, say, binary responses or multiple mea
 - Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
 
 
-## Topics edited for time
+## Topics cut for time
 
 
 ## Nonlinear Effects
@@ -717,28 +717,6 @@ for(i in 1:50)lines(density(sim_nlm[[i]]), col = "grey80")
 ```
 
 
-
-## ggplot2 code for creating plot of simulated data
-
-Here's how to make the simulation plot using ggplot2. I find base R graphics easier for this type of plot. 
-
-```{r}
-sim2 <- simulate(m2, nsim = 50)
-library(ggplot2)
-library(tidyr)
-sim2 %>% 
-  pivot_longer(everything(), 
-               names_to = "simulation", 
-               values_to = "totalvalue") %>% 
-  ggplot() +
-  geom_density(mapping = aes(x = totalvalue, group = simulation),
-               color = "grey80") + 
-  geom_density(mapping = aes(x = log(totalvalue)),
-               data = homes)  
-
-```
-
-
 ## ANOVA revisited
 
 We can also use the `anova()` function to compare _nested models_. This means one model is a subset of another. For example, below we fit progressively more complicated models, building up to our model, `m2`: `log(totalvalue) ~ finsqft + bedroom + lotsize`
@@ -825,6 +803,82 @@ rbind("mod_02" = -2*logLik(mod_02) + log(nrow(homes))*4,
 ```
 
 Of course, you don't have to choose one. You can use both AIC and BIC and report both. They will often choose the same models. 
+
+
+## Collinearity
+
+When predictors are highly correlated (ie, have strong linear relationships), the precision of coefficient estimates can decline. This phenomenon is often referred to as _collinearity_ or _multicollinearity_. Let's demonstrate with a toy example. First we generate two variables, x1 and x2, that are highly correlated:
+
+```{r}
+x1 <- seq(1,10,length = 100)
+set.seed(123)
+x2 <- 1 + 2*x1 + rnorm(100, sd = 0.2)
+cor(x1, x2)  # calculate correlation; perfect correlation = 1
+```
+
+Now we generate a new variable, `y`, using `x1` and `x2` along with some noise and fit a linear model to recover the true coefficients of 2 and 3. Notice in the pairwise scatterplot that `x1` and `x2` both seem associated with `y` in the same way.
+
+```{r}
+set.seed(321)
+y <- 0.5 + 2*x1 + 3*x2 + rnorm(100, sd = 10)
+d_collinear <- data.frame(y, x1, x2)
+pairs(d_collinear)
+```
+
+When we fit the model, our estimated coefficients are way off and have enormous standard errors. The "true" values are 2 and 3. The model estimates are about 12 and -2! Recall we interpret the `x1` coefficient as its effect on `y` holding `x2` constant. But since `x1` and `x2` are highly correlated, it's all but impossible to estimate the effect of `x1` while holding `x2` constant.
+
+```{r}
+mod_colinear <- lm(y ~ x1 + x2)
+summary(mod_colinear)
+```
+
+One way to check for and quantify collinearity after fitting a model is calculating _variance inflation factors_ (VIF). Fortunately this is easy to do using the `vif()` function in the car package. The square root of the VIF can be interpreted as how much larger the standard error of the coefficient is relative to similar uncorrelated data. 
+
+```{r}
+library(car)
+vif(mod_colinear) |> sqrt()
+```
+
+This says the standard error for both variables is about 29 times larger than it would have been without collinearity. This suggests we would like to see VIF values close to 1. The best solution in this case would be to simply drop one of the variables. It appears `x1` is almost completely determined by `x2` and vice versa. Knowing one means you know the other. In the extreme case, when two variables are perfectly correlated, the model fitting procedure will return NA for one of the variables, as demonstrated below. Notice the message: "(1 not defined because of singularities)"
+
+```{r}
+x2 <- 2*x1  # perfect correlation
+summary(lm(y ~ x1 + x2))
+```
+
+Let's check our `m2` model where we modeled `log(totalprice)` as a function of finsqft, bedroom and lotsize:
+
+```{r}
+vif(m2) |> sqrt()
+```
+
+These VIFs look good. We might suspect that finsqft and number of bedrooms could be highly correlated, but the VIF checks out.
+
+One approach to addressing collinearity concerns is to use a data reduction technique such as principal components analysis (PCA). When it works, this method basically takes several variables and reduces them to one or two summary scores. This may be preferable to arbitrarily dropping variables. 
+
+For models that are intended for making predictions, collinearity is probably not much of a concern. 
+
+
+## ggplot2 code for creating plot of simulated data
+
+Here's how to make the simulation plot using ggplot2. I find base R graphics easier for this type of plot. 
+
+```{r}
+sim2 <- simulate(m2, nsim = 50)
+library(ggplot2)
+library(tidyr)
+sim2 %>% 
+  pivot_longer(everything(), 
+               names_to = "simulation", 
+               values_to = "totalvalue") %>% 
+  ggplot() +
+  geom_density(mapping = aes(x = totalvalue, group = simulation),
+               color = "grey80") + 
+  geom_density(mapping = aes(x = log(totalvalue)),
+               data = homes)  
+
+```
+
 
 
 ## How to make a function for simulating and plotting data for a linear model
