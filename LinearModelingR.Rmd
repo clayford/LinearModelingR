@@ -832,14 +832,20 @@ mod_colinear <- lm(y ~ x1 + x2)
 summary(mod_colinear)
 ```
 
-One way to check for and quantify collinearity after fitting a model is calculating _variance inflation factors_ (VIF). Fortunately this is easy to do using the `vif()` function in the car package. The square root of the VIF can be interpreted as how much larger the standard error of the coefficient is relative to similar uncorrelated data. 
+The most common way to check for and quantify collinearity after fitting a model is calculating _variance inflation factors_ (VIF). The details of the calculation can be found with a web search, but the basic idea is that if one of the raw VIFs is greater than 10, then we may have evidence that collinearity is influencing coefficient estimates. Fortunately this is easy to do using the `vif()` function in the car package. The VIFs are sky high for our contrived predictors!
 
 ```{r}
 library(car)
+vif(mod_colinear)
+```
+
+The square root of the VIF can be interpreted as how much larger the standard error of the coefficient is relative to similar uncorrelated data. 
+
+```{r}
 vif(mod_colinear) |> sqrt()
 ```
 
-This says the standard error for both variables is about 29 times larger than it would have been without collinearity. This suggests we would like to see VIF values close to 1. The best solution in this case would be to simply drop one of the variables. It appears `x1` is almost completely determined by `x2` and vice versa. Knowing one means you know the other. In the extreme case, when two variables are perfectly correlated, the model fitting procedure will return NA for one of the variables, as demonstrated below. Notice the message: "(1 not defined because of singularities)"
+This says the standard error for both variables is about 29 times larger than it would have been without collinearity. The best solution in this case would be to simply drop one of the variables. It appears `x1` is almost completely determined by `x2` and vice versa. Knowing one means you know the other. In the extreme case, when two variables are perfectly correlated, the model fitting procedure will return NA for one of the variables, as demonstrated below. Notice the message: "(1 not defined because of singularities)"
 
 ```{r}
 x2 <- 2*x1  # perfect correlation
@@ -849,14 +855,57 @@ summary(lm(y ~ x1 + x2))
 Let's check our `m2` model where we modeled `log(totalprice)` as a function of finsqft, bedroom and lotsize:
 
 ```{r}
-vif(m2) |> sqrt()
+vif(m2)
 ```
 
-These VIFs look good. We might suspect that finsqft and number of bedrooms could be highly correlated, but the VIF checks out.
+These VIFs look very good. We might suspect that finsqft and number of bedrooms could be highly correlated, but the VIF checks out.
 
 One approach to addressing collinearity concerns is to use a data reduction technique such as principal components analysis (PCA). When it works, this method basically takes several variables and reduces them to one or two summary scores. This may be preferable to arbitrarily dropping variables. 
 
 For models that are intended for making predictions, collinearity is probably not much of a concern. 
+
+
+## Transformation guidelines
+
+Above we log-transformed `totalvalue` to help meet modeling assumptions. Recall without the log transformation our residuals were large and skewed, which is a fancy way of saying our model was a bad fit. A good fitting model should have relatively small residuals with even scatter. 
+
+A log-transformation made sense for two reasons:
+
+1. `totalvalue` was strictly positive, had a large upper bound, and covered several orders of magnitude. 
+2. changes in `totalvalue` according to the predictors were relative (multiplicative) and not absolute (additive), which corresponds to the natural log scale.
+
+It's important to note that not all skewed variables need to be transformed when it comes to linear modeling. The distributional assumptions are on the residuals. However there may be times when you need to investigate transformations other than a log transformation when it comes to modeling. These almost always some sort of _power transformation_ (ie, raising your variable to a power using an exponent). Powers are usually symbolized with a Greek lambda (λ). A power of 0 translates to a log transformation.
+
+Say your variable is `y`. A basic palette of powers include:
+
+- λ = -1     1/y
+- λ = -0.5   1/sqrt(y)
+- λ = 0      log(y)
+- λ = 0.5    sqrt(y)
+- λ = 1      y (no transformation)
+- λ = 2      y^2
+
+The car function `symbox()` creates a visual assessment of which power makes the distribution reasonably symmetric. Below when we use it with `totalvalue` we see that the log transformation (λ = 0) does the best job of making the distribution more symmetric. 
+
+```{r}
+symbox(homes$totalvalue)
+```
+
+We can also use `symbox()` on a model object. For example, this produces essentially the same plot using the residuals of the model instead of `totalvalue`. Simply pipe the model object into `symbox()`.
+
+```{r}
+lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
+  symbox()
+```
+
+A statistical "search" for the "best" power transformation can be performed with the `powerTransform()` function. The usual practice is to convert the result to the closest simple power listed above. For example, we can pipe the model result into `powerTransform()` and see the "best" transformation is about 0.16.
+
+```{r}
+lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
+  powerTransform() 
+```
+
+0.16 is close to 0, so it makes sense to proceed with a log transformation. That greatly simplifies interpretation.
 
 
 ## ggplot2 code for creating plot of simulated data
