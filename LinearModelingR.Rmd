@@ -874,9 +874,9 @@ A log-transformation made sense for two reasons:
 1. `totalvalue` was strictly positive, had a large upper bound, and covered several orders of magnitude. 
 2. changes in `totalvalue` according to the predictors were relative (multiplicative) and not absolute (additive), which corresponds to the natural log scale.
 
-It's important to note that not all skewed variables need to be transformed when it comes to linear modeling. The distributional assumptions are on the residuals. However there may be times when you need to investigate transformations other than a log transformation when it comes to modeling. These almost always some sort of _power transformation_ (ie, raising your variable to a power using an exponent). Powers are usually symbolized with a Greek lambda (λ). A power of 0 translates to a log transformation.
+It's important to note that not all skewed variables need to be transformed when it comes to linear modeling. The distributional assumptions are on the residuals. However there may be times when you need to investigate transformations other than the log when it comes to modeling. These almost always take the form of a _power transformation_ (ie, raising your variable to a power using an exponent). Powers are usually symbolized with a Greek lambda (λ). A power of 0 translates to a log transformation.
 
-Say your variable is `y`. A basic palette of powers include:
+Say your variable is `y`. A basic palette of possible power transformations include:
 
 - λ = -1     1/y
 - λ = -0.5   1/sqrt(y)
@@ -891,14 +891,14 @@ The car function `symbox()` creates a visual assessment of which power makes the
 symbox(homes$totalvalue)
 ```
 
-We can also use `symbox()` on a model object. For example, this produces essentially the same plot using the residuals of the model instead of `totalvalue`. Simply pipe the model object into `symbox()`.
+We can also use `symbox()` on a model object. For example, this produces essentially the same plot using the residuals of the model instead of `totalvalue`. Simply pipe the model into `symbox()`.
 
 ```{r}
 lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
   symbox()
 ```
 
-A statistical "search" for the "best" power transformation can be performed with the `powerTransform()` function. The usual practice is to convert the result to the closest simple power listed above. For example, we can pipe the model result into `powerTransform()` and see the "best" transformation is about 0.16.
+A statistical "search" for the "best" power transformation can be performed with the `powerTransform()` function, also in the car package. The usual practice is to convert the result to the closest simple power listed above. For example, we can pipe the model result into `powerTransform()` and see the "best" transformation is about 0.16.
 
 ```{r}
 lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
