@@ -432,7 +432,7 @@ table(homes$hsdistrict)
 
 These levels are not numbers, so how does R handle this in a linear model? It creates a _contrast_. This is a matrix of zeroes and ones. If you have K levels, you'll have K-1 columns. In this case we'll have two columns: one for Monticello HS and one for Western Albemarle HS. By default R takes whatever level comes first alphabetically and makes it the _baseline_ or _reference_ level. 
 
-This is called a _treatment contrast_ and is the default in R.
+Let's look at the default contrast, called a _treatment contrast_. To do this we convert the hsdistrict column to factor and then use the `contrasts()` function. (We don't have to do this to add hsdistrict to our model! I'm just doing this to output the contrast "definition")
 
 ```{r}
 contrasts(factor(homes$hsdistrict))
@@ -488,7 +488,7 @@ summary(m6)
 
 Interpretation is now much more difficult. We cannot directly interpret the _main effects_ of `fullbath`, `finsqft` or `hsdistrict`. They interact. What's the effect of `finsqft`? It depends on `fullbath` and `hsdistrict`. 
 
-Are the interactions "significant" or necessary? We can use the `anova` function to evaluate this question. This runs a series of partial F-tests. Each row below is a hypothesis test. The null is the model with this predictor is the same as the model without the predictor. The anova tests below use what are called Type I sums of squares. This respects the order of the variables in the model. So...
+Are the interactions "significant" or necessary? We can use the `anova` function to evaluate this question. This runs a series of _partial F-tests_. Each row below is a hypothesis test. The null is the model with this predictor is the same as the model without the predictor. The anova tests below use what are called Type I sums of squares. This respects the order of the variables in the model. So...
 
 - the first test compares a model with just an intercept to a model with an intercept and fullbath.
 - the second test compares a model with an intercept and fullbath to a model with an intercept, fullbath and finsqft.
@@ -520,7 +520,7 @@ What exactly was plotted? We can see by calling `ggpredict` without `plot`
 ggpredict(m6, terms = c("fullbath", "hsdistrict"))
 ```
 
-`ggpredict` used our model to make `totalvalue` predictions for various values of `fullbath` in the three school districts, holding finsqft at 1828. 
+`ggpredict` used our model to make `totalvalue` predictions for various values of `fullbath` in the three school districts, holding finsqft at 1828 (the median of finsqft). 
 
 We can specify our values if we like. For example, make an effect plot for 1 - 5 bathrooms and hold `finsqft` at 2000:
 
