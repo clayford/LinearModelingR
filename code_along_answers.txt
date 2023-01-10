@@ -80,12 +80,3 @@ anova(nlm4)
 
 plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "hsdistrict")))
 
-4. Check the graphical model assumptions using the `plot` function.
-
-plot(nlm4)
-
-5. How well does the distribution of the model-generated data match the distribution of the observed data?
-
-sim_nlm <- simulate(nlm4, nsim = 50)
-plot(density(log(homes$totalvalue)))
-for(i in 1:50)lines(density(sim_nlm[[i]]), col = "grey80")

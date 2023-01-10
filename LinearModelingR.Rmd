@@ -548,52 +548,23 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis. How notable is this interaction?
 
 
-
-
-## Wrap-up
-
-This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
-
-What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
-
-Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
-
-- generalized linear models (for binary and count responses)
-- multinomial logit models (for categorical responses)
-- ordered logit models (for ordered categorical responses)
-- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
-- survival models (for responses that measure time to an event)
-- time series models (for responses that exhibit, say, seasonal variation over time)
-
-**References**
-
-- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
-- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
-- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
-- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
-- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
-
-
-## Topics cut for time
-
-
 ## Nonlinear Effects
 
-So far we have assumed that the relationship between a predictor and the response is linear (eg, for a 1-unit change in a predictor, the response changes by a fixed amount). That assumption can sometimes be too simple and not realistic. Fortunately there are ways to fit non-linear effects in a linear model.
+So far we have assumed that the relationship between a predictor and the response is _linear_ (eg, for a 1-unit change in a predictor, the response changes by a fixed amount). That assumption can sometimes be too simple and not realistic. Fortunately there are ways to fit non-linear effects in a linear model.
 
 Here's a quick example of simulated non-linear data: a 2nd degree polynomial.
 
 ```{r}
 x <- seq(from = -10, to = 10, length.out = 100)
 set.seed(3)
-y <- 1.2 + 2*x + 0.9*x^2 + rnorm(100, sd = 10)
+y <- 1.2 + 2*x + 0.9*x^2 + rnorm(100, mean = 0, sd = 10)
 nl_dat <- data.frame(y, x)
 plot(y ~ x, nl_dat)
 ```
 
-Clearly a straight-line model will not work for this data. The relationship between x and y is not adequately summarized by a straight line model.
+Clearly a straight-line model will not work well for this data. The relationship between x and y is not adequately summarized by a straight line model.
 
-If we wanted to try to "recover" the weights we used in simulating this data we could fit a polynomial model:
+If we wanted to try to "recover" the weights we used in simulating this data we could fit a polynomial model using the `poly()` function in the formula syntax:
 
 
 ```
@@ -603,7 +574,7 @@ nlm1 <- lm(y ~ poly(x, degree = 2, raw = TRUE), data = nl_dat)
 
 However, the recommended approach to fitting non-linear effects is to use _natural splines_ instead of polynomials. Natural splines essentially allow us to fit a series of cubic polynomials connected at knots located in the range of our data.
 
-The easiest option is to use the `ns()` function from the splines package. `ns` stands for "natural splines". The second argument is the degrees of freedom (`df`). It may help to think of `df` as the number of times the smooth line changes directions. 
+The easiest option is to use the `ns()` function from the splines package, which comes installed with R. `ns` stands for "natural splines". The second argument is the degrees of freedom (`df`). It may help to think of `df` as the number of times the smooth line changes directions. 
 
 Frank Harrell states in his book _Regression Model Strategies_ that 3 to 5 `df` is almost always sufficient. His basic advice is to allocate more `df` to variables you think are more important.
 
@@ -615,7 +586,7 @@ nlm2 <- lm(y ~ ns(x, df = 2), data = nl_dat)
 summary(nlm2)
 ```
 
-Here's one way to see the fitted line.
+The summary output is impossible to interpret. Let's visualize the fit with an effect plot.
 
 ```{r}
 library(ggeffects)
@@ -631,7 +602,7 @@ nlm3 <- lm(log(totalvalue) ~ ns(finsqft, 5) + hsdistrict + lotsize +
          data = homes)
 ```
 
-The `anova` function allows us to assess the non-linear effect and the interaction:
+The `anova` function allows us to assess the non-linear effect and the interaction. Some sort of interaction between finsqft and hsdistrict appears to be present.
 
 ```{r}
 anova(nlm3)
@@ -645,7 +616,7 @@ summary(nlm3)
 ```
 
 
-Effect plots are our only hope for understanding this model.
+Effect plots are our only hope for understanding this model. Below we plot predicted totalvalue over finsqft ranging from 1000 - 3000, grouped by hsdistrict.
 
 ```{r}
 plot(ggpredict(nlm3, terms = c("finsqft[1000:3000 by=250]", "hsdistrict")))
@@ -685,42 +656,41 @@ cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 
 1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `hsdistrict`, and the interaction of `hsdistrict` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
 
-```{r}
-nlm4 <- lm(log(totalvalue) ~ ns(finsqft, df = 5) + hsdistrict + 
-             ns(finsqft, df = 5):hsdistrict, data = homes)
-```
 
 
 2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
 
-```{r}
-anova(nlm4)
-```
 
 
 3. Create an effect plot of `finsqft` by `hsdistrict`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`. 
 
-```{r}
-plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "hsdistrict")))
-```
 
 
-4. Check the graphical model assumptions using the `plot` function.
+## Wrap-up
 
-```{r}
-plot(nlm4)
-```
+This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
+
+What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
+
+Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
+
+- generalized linear models (for binary and count responses)
+- multinomial logit models (for categorical responses)
+- ordered logit models (for ordered categorical responses)
+- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
+- survival models (for responses that measure time to an event)
+- time series models (for responses that exhibit, say, seasonal variation over time)
+
+**References**
+
+- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
+- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
+- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
+- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
+- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
 
 
-
-5. How well does the distribution of the model-generated data match the distribution of the observed data?
-
-```{r}
-sim_nlm <- simulate(nlm4, nsim = 50)
-plot(density(log(homes$totalvalue)))
-for(i in 1:50)lines(density(sim_nlm[[i]]), col = "grey80")
-
-```
+## Topics cut for time
 
 
 ## ANOVA revisited
