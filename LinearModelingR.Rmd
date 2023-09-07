@@ -694,6 +694,38 @@ Things get more complicated when you have, say, binary responses or multiple mea
 
 ## Topics cut for time
 
+## How does lm() work?
+
+`lm()` estimates regression coefficients using ordinary least squares, or OLS. The formula for this using matrix algebra is as expressed as follows:
+
+$$\hat{\beta} = (X'X)^{-1}X'Y $$
+
+where X is the model matrix (our predictors as they appear in the model) and Y is the dependent variable. The prime symbol `'` means transpose the matrix. The `-1` means take the inverse. R was developed to make calculations such as these quite easy. 
+
+Let's revisit model m2.
+
+```{r}
+formula(m2)
+```
+
+Here are the coefficients returned by `lm()`:
+
+```{r}
+round(coef(m2), 4)
+```
+
+Let's find these using the formula above. We can use `model.matrix()` to get X, `t()` to transpose, and `solve()` to take the inverse. Perform matrix multiplication with `%*%`
+
+```{r}
+X <- model.matrix(~ finsqft + bedroom + lotsize, data = homes)
+Y <- log(homes$totalvalue)
+B <- solve(t(X) %*% X) %*% t(X) %*% Y
+round(B, 4)
+```
+
+While this is theoretically what `lm()` does, it actually uses more sophisticated methods for faster performance and protection against numeric instability. This page goes into more details if you're interested in learning more:
+
+https://genomicsclass.github.io/book/pages/qr_and_regression.html
 
 ## ANOVA revisited
 
