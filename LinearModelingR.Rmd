@@ -1,6 +1,6 @@
 ---
 title: "Linear Modeling in R"
-author: "Clay Ford, Statistical Research Consultant, UVA Library"
+author: "Clay Ford, UVA Library"
 output: html_notebook
 editor_options: 
   chunk_output_type: inline
@@ -133,7 +133,7 @@ lines(density(d$y2), col = "red")  # simulate data
 
 This looks good as well. The distribution of our model-generated data is very similar to our observed data. You should do this more than once, say 50 times, to ensure the model consistently generates data similar to the observed data. We show one way to do that later in the workshop.
 
-Since we think our model is "good", we might use it to make a prediction. For example, when x = 10 what's the expected value of y? Put another way, what's the mean of y conditional on x = 10? We can do that with the `predict()` function.  The `interval = "confidence"` arguments says return a 95% confidence interval (CI) for this mean.
+Since we think our model is "good", we might use it to make a prediction. For example, when x = 10 what's the expected value of y? Put another way, what's the _mean_ of y conditional on x = 10? We can do that with the `predict()` function.  The `interval = "confidence"` arguments says return a 95% confidence interval (CI) for this mean.
 
 ```{r}
 predict(mod, newdata = data.frame(x = 10), interval = "confidence")
@@ -167,6 +167,7 @@ d$z <- runif(25, min = -100, max = 100)
 REMINDER: Add a new R code chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I* (Win/Linux) or *Cmd+Option+I* (Mac). 
 
 1. Model `y` as a function of `z` using `lm(y ~ z, data = d)` and save to an object called `mod2`. View the summary. What formula does the model return? What is the estimated standard deviation of the Normally distributed noise?
+
 
 
 2. Use the model to simulate density histograms and compare to the original density histogram of `d$y`. Run the chunk several times to see how the model-generated density curve varies. 
@@ -544,8 +545,9 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 
 
-
 2. Visualize the interaction using the `ggpredict` function. Perhaps use `[1000:4000 by=500]` to set the range of `finsqft` on the x-axis. How notable is this interaction?
+
+
 
 
 ## Nonlinear Effects
@@ -961,7 +963,7 @@ ppc_dens_overlay(log(homes$totalvalue), t(sim2))
 
 **performance package**
 
-The easystats collection of packages "aims to provide a unifying and consistent framework to tame, discipline, and harness the scary R statistics and their pesky models." https://easystats.github.io/easystats/ One of the packages is called performance, which provides the `check_predictions()` function for simulating data from a model and comparing it to the distribution of the original data. Two potential drawbacks at the time of this writing:
+The easystats collection of packages "aims to provide a unifying and consistent framework to tame, discipline, and harness the scary R statistics and their pesky models." https://easystats.github.io/easystats/ One of the packages is called {performance}, which provides the `check_predictions()` function for simulating data from a model and comparing it to the distribution of the original data. Two potential drawbacks at the time of this writing:
 
 1. Can be slow for large data sets
 2. log transformed data needs to be added as a variable to the data and modeled directly, as opposing to doing it on-the-fly as `log(totalvalue)`
@@ -969,7 +971,8 @@ The easystats collection of packages "aims to provide a unifying and consistent 
 Quick demo. Note the warning: "Minimum value of original data is not included in the replicated data." This says the model is not generating data as small as the smallest value in the original data, which is 9600.
 
 ```{r}
-install.packages("performance")
+# install.packages("performance")
+# install.packages("see")
 library(performance)
 
 # add log(totalvalue) to data and fit new model
