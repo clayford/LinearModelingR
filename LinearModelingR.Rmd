@@ -692,11 +692,11 @@ Things get more complicated when you have, say, binary responses or multiple mea
 - Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
 
 
-## Topics cut for time
+## Bonus material/topics cut for time
 
 ## How does lm() work?
 
-`lm()` estimates regression coefficients using ordinary least squares, or OLS. The formula for this using matrix algebra is as expressed as follows:
+`lm()` estimates regression coefficients using ordinary least squares, or OLS. The formula for this using matrix algebra is expressed as follows:
 
 $$\hat{\beta} = (X'X)^{-1}X'Y $$
 
@@ -726,6 +726,7 @@ round(B, 4)
 While this is theoretically what `lm()` does, it actually uses more sophisticated methods for faster performance and protection against numeric instability. This page goes into more details if you're interested in learning more:
 
 https://genomicsclass.github.io/book/pages/qr_and_regression.html
+
 
 ## ANOVA revisited
 
