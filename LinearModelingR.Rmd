@@ -656,15 +656,13 @@ cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 
 ## CODE ALONG 5
 
-1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `hsdistrict`, and the interaction of `hsdistrict` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
-
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
 
 
 2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
 
 
-
-3. Create an effect plot of `finsqft` by `hsdistrict`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`. 
+3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
 
 
 
