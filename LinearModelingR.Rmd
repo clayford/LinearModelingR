@@ -30,7 +30,7 @@ Add a new R code chunk by clicking the *Insert Chunk* button on the toolbar or b
 
 ## CODE ALONG 0
 
-Insert a new R code chunk below and type and run the code: Sys.time()
+Insert a new R code chunk below and type and run the code: `Sys.time()`
 
 
 
@@ -257,14 +257,14 @@ Some naive interpretation:
 
 Each of these interpretations assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
 
-Is this a "good" model? Let's simulate data from the model and compare it to our observed data. A "good" model should generate data that looks similar to the original data. 
+Is this a "good" model? Let's _simulate data from the model_ and compare it to our observed data. A "good" model should generate data that looks similar to the original data. 
 
 We could do this by hand:
 
 ```{r}
-sim_value <- -133328.2482 + 284.4613*homes$finsqft + 
+sim_values <- -133328.2482 + 284.4613*homes$finsqft + 
   -13218.4091*homes$bedroom + 4268.7655*homes$lotsize + 
-  rnorm(3025, sd = 227200)
+  rnorm(3025, mean = 0, sd = 227200)
 ```
 
 An easier and faster way is to use the `simulate()` function which allows you to generate multiple samples. Here we generate 50 samples. Each sample will have the same number of observations as our original sample (n = 3025). Each sample value is generated using our observed values for `finsqft`, `bedroom`, and `lotsize`. The result is a data frame with 50 columns.
@@ -300,13 +300,13 @@ plot(m1)
 
 How to interpret plots:
 
-1. Residuals vs Fitted: should have a horizontal line with uniform and symmetric scatter of points; if not, evidence that SD is not constant
+1. Residuals vs Fitted: for checking constant variance; should have a horizontal line with uniform and symmetric scatter of points; if not, evidence that SD is not constant
 
-2. Normal Q-Q: points should lie close to diagonal line; if not, evidence that noise is not drawn from N(0, SD)
+2. Normal Q-Q: for checking normality of residuals; points should lie close to diagonal line; if not, evidence that noise is not drawn from N(0, SD). This assumption is only really critical if you're planning to use your model to predict exact values (instead of means) and calculate a confidence interval. 
 
-3. Scale-Location: should have a horizontal line with uniform scatter of point; (similar to #1 but easier to detect trend in dispersion)
+3. Scale-Location: for checking constant variance; should have a horizontal line with uniform scatter of point; (similar to #1 but easier to detect trend in dispersion)
 
-4. Residuals vs Leverage: points outside the contour lines are influential observations. Leverage is the distance from the center of all predictors. An observation with high leverage has substantial influence on the fitted value.
+4. Residuals vs Leverage: for checking for influential observations; points outside the contour lines are influential observations. Leverage is the distance from the center of all predictors. An observation with high leverage has substantial influence on the fitted value.
 
 By default the 3 "most extreme" points are labeled by row number. 2658 appears in all four plots. It's a really big expensive home.
 
@@ -352,7 +352,7 @@ for(i in 1:50)lines(density(sim2[[i]]), lty = 2, col = "grey80")
 
 This doesn't look too bad!
 
-Let's say we're happy with this model. How do we interpret the coefficients? Since the response is log transformed, we interpret the coefficients as _approximate proportional differences_. Below we view the coefficients rounded to 4 decimal places.
+Let's say we're happy with this model. How do we interpret the coefficients? Since the response is log transformed, we interpret the coefficients as _multiplicative instead of additive_. Below we view the coefficients rounded to 4 decimal places.
 
 
 ```{r}
@@ -367,13 +367,13 @@ round(coef(m2), 4) * 100
 
 Some naive interpretations:
 
-- each additional finished square foot increases price by 0.05%. Or multiply by 100 to say each additional 100 finished square feet increases price by 5%.
-- each additional bedroom increases price by about 4.3%
-- each additional lot size acre increases price by about 0.47%
+- each additional finished square foot increases expected mean price by 0.05%. Or multiply by 100 to say each additional 100 finished square feet increases expected mean price by 5%.
+- each additional bedroom increases expected mean price by about 4.3%
+- each additional lot size acre increases expected mean price by about 0.47%
 
 Remember, the interpretation assumes _all other variables are held constant_! 
 
-A slightly more precise estimation can be obtained by _exponentiating_ the coefficients and then interpreting the effects as _multiplicative_ instead of additive. Below we exponentiate using the `exp` function and then round to 4 decimal places.
+A slightly more precise estimation can be obtained by _exponentiating_ the coefficients. Below we exponentiate using the `exp()` function and then round to 4 decimal places.
 
 ```{r}
 round(exp(coef(m2)), 4) 
@@ -403,7 +403,7 @@ All of the p-values refer to hypothesis tests that the coefficients are 0. Many 
 round(confint(m2) * 100, 4)
 ```
 
-According to our model, each additional bedroom adds between 2% and 6% to the value of a home, assuming all else held constant.
+According to our model, each additional bedroom adds about 3% to 6% to the value of a home, assuming all else held constant.
 
 ## CODE ALONG 2
 
@@ -436,7 +436,8 @@ These levels are not numbers, so how does R handle this in a linear model? It cr
 Let's look at the default contrast, called a _treatment contrast_. To do this we convert the hsdistrict column to factor and then use the `contrasts()` function. (We don't have to do this to add hsdistrict to our model! I'm just doing this to output the contrast "definition")
 
 ```{r}
-contrasts(factor(homes$hsdistrict))
+homes$hsdistrict <- factor(homes$hsdistrict)
+contrasts(homes$hsdistrict)
 ```
 
 A model with `hsdistrict` will have two coefficients: `Monticello` and  `Western Albemarle`
@@ -474,7 +475,7 @@ It appears that the value of a home in Western Albemarle will be about 10% highe
 
 ## Modeling Interactions
 
-In our model above that included `hsdistrict` we assumed the effects were _additive_. For example, it didn't matter what high school district your home was in, the effect of `bathroom` or `finsqft` was the same. It also assumed the effect of each additional `fullbath` was the same regardless of how big the house was, and vice versa. This may be too simple. 
+In our model above that included `hsdistrict` we assumed the effects were _additive_. For example, it didn't matter what high school district your home was in, the effect of `fullbath` or `finsqft` was the same. It also assumed the effect of each additional `fullbath` was the same regardless of how big the house was, and vice versa. This may be too simple. 
 
 Interactions allow the effects of variables to depend on other variables. Again subject matter knowledge helps with the proposal of interactions. As we'll see interactions make your model more flexible but harder to understand.
 
@@ -489,7 +490,7 @@ summary(m6)
 
 Interpretation is now much more difficult. We cannot directly interpret the _main effects_ of `fullbath`, `finsqft` or `hsdistrict`. They interact. What's the effect of `finsqft`? It depends on `fullbath` and `hsdistrict`. 
 
-Are the interactions "significant" or necessary? We can use the `anova` function to evaluate this question. This runs a series of _partial F-tests_. Each row below is a hypothesis test. The null is the model with this predictor is the same as the model without the predictor. The anova tests below use what are called Type I sums of squares. This respects the order of the variables in the model. So...
+Are the interactions "significant" or necessary? We can use the `anova()` function to evaluate this question. This runs a series of _partial F-tests_. Each row below is a hypothesis test. The null is the model with this predictor is the same as the model without the predictor. The anova tests below use what are called _Type I_ sums of squares. This respects the order of the variables in the model. So...
 
 - the first test compares a model with just an intercept to a model with an intercept and fullbath.
 - the second test compares a model with an intercept and fullbath to a model with an intercept, fullbath and finsqft.
@@ -533,11 +534,10 @@ plot(ggpredict(m6, terms = c("fullbath[1:5]", "hsdistrict"),
 What about the effects of `finsqft` and `fullbath`? This is _an interaction of two numeric variables_. The second variable has to serve as a grouping variable when creating an effect plot. Below we set `fullbath` to take values 2 - 5 and `finsqft` to take values of 1000 - 4000 in steps of 500.
 
 ```{r}
-# plot(ggpredict(m6, terms = c("finsqft", "fullbath")))
 plot(ggpredict(m6, terms = c("finsqft[1000:4000 by=500]", "fullbath[2:5]")))
 ```
 
-The effect of `finsqft` seems to taper off the more fullbaths a house has. But there are few large homes with 2 full baths, and likewise, few small homes with 5 full baths. Even though the interaction is "significant" in the model, it's clearly a very small interaction.
+The effect of `finsqft` seems to taper off the more fullbaths a house has. But there are few large homes with 2 full baths, and likewise, few small homes with 5 full baths. Even though the interaction is "significant" in the model, it's clearly a very small interaction and probably not important.
 
 ## CODE ALONG 4
 
@@ -549,6 +549,32 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 
 
+
+## Wrap-up
+
+This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
+
+What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
+
+Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
+
+- generalized linear models (for binary and count responses)
+- multinomial logit models (for categorical responses)
+- ordered logit models (for ordered categorical responses)
+- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
+- survival models (for responses that measure time to an event)
+- time series models (for responses that exhibit, say, seasonal variation over time)
+
+**References**
+
+- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
+- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
+- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
+- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
+- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
+
+
+## Bonus material/topics cut for time
 
 ## Nonlinear Effects
 
@@ -599,7 +625,7 @@ plot(ggpredict(nlm2, terms = "x"), add.data = TRUE)
 Let's return to the homes data and fit a non-linear effect for `finsqft` using a natural spline with 5 `df`. Below we also include `hsdistrict` and `lotsize` and allow `finsqft` and `hsdistrict` to interact.
 
 ```{r}
-nlm3 <- lm(log(totalvalue) ~ ns(finsqft, 5) + hsdistrict + lotsize +
+nlm3 <- lm(log(totalvalue) ~ ns(finsqft, 5) + lotsize + hsdistrict +
            ns(finsqft, 5):hsdistrict, 
          data = homes)
 ```
@@ -654,43 +680,6 @@ cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 ```
 
 
-## CODE ALONG 5
-
-1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
-
-
-2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
-
-
-3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
-
-
-
-## Wrap-up
-
-This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
-
-What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
-
-Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
-
-- generalized linear models (for binary and count responses)
-- multinomial logit models (for categorical responses)
-- ordered logit models (for ordered categorical responses)
-- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
-- survival models (for responses that measure time to an event)
-- time series models (for responses that exhibit, say, seasonal variation over time)
-
-**References**
-
-- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
-- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
-- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
-- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
-- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
-
-
-## Bonus material/topics cut for time
 
 ## How does lm() work?
 
