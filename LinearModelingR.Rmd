@@ -182,6 +182,8 @@ Let's import the data we'll be using today. The data we'll work with is Albemarl
 ```{r}
 URL <- 'https://raw.githubusercontent.com/clayford/dataviz_with_ggplot2/master/alb_homes.csv'
 homes <- read.csv(file = URL)
+homes$hsdistrict <- factor(homes$hsdistrict)
+homes$cooling <- factor(homes$cooling)
 ```
 
 Let's look at the first few rows:
@@ -549,33 +551,6 @@ The effect of `finsqft` seems to taper off the more fullbaths a house has. But t
 
 
 
-
-## Wrap-up
-
-This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
-
-What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
-
-Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
-
-- generalized linear models (for binary and count responses)
-- multinomial logit models (for categorical responses)
-- ordered logit models (for ordered categorical responses)
-- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
-- survival models (for responses that measure time to an event)
-- time series models (for responses that exhibit, say, seasonal variation over time)
-
-**References**
-
-- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
-- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
-- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
-- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
-- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
-
-
-## Bonus material/topics cut for time
-
 ## Nonlinear Effects
 
 So far we have assumed that the relationship between a predictor and the response is _linear_ (eg, for a 1-unit change in a predictor, the response changes by a fixed amount). That assumption can sometimes be too simple and not realistic. Fortunately there are ways to fit non-linear effects in a linear model.
@@ -618,7 +593,7 @@ The summary output is impossible to interpret. Let's visualize the fit with an e
 
 ```{r}
 library(ggeffects)
-plot(ggpredict(nlm2, terms = "x"), add.data = TRUE)
+plot(ggpredict(nlm2, terms = "x"), show_data = TRUE)
 ```
 
 
@@ -678,6 +653,45 @@ Homes 12 and 40 are very low in totalvalue and the model way overpredicts their 
 ```{r}
 cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 ```
+
+## CODE ALONG 5
+
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
+
+
+2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
+
+
+3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
+
+
+
+## Wrap-up
+
+This was meant to show you the basics of linear modeling in R. Hopefully you have a better grasp of how linear modeling works. Scroll down for a few more topics.
+
+What we did today works for _independent, numeric outcomes_. We had one observation per home and our response was `totalvalue`, a number. Our models returned expected _mean_ total value given various predictors. This is a pretty simple design.
+
+Things get more complicated when you have, say, binary responses or multiple measures on the same subject (or home). A non-exhaustive list of other types of statistical modeling include:
+
+- generalized linear models (for binary and count responses)
+- multinomial logit models (for categorical responses)
+- ordered logit models (for ordered categorical responses)
+- mixed-effect or longitudinal linear models (for responses with multiple measures on the same subject or clusters of related measures)
+- survival models (for responses that measure time to an event)
+- time series models (for responses that exhibit, say, seasonal variation over time)
+
+**References**
+
+- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
+- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
+- Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
+- Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
+- Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
+
+
+## Bonus material/topics cut for time
+
 
 
 

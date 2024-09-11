@@ -63,4 +63,18 @@ anova(m7)
 
 plot(ggpredict(m7, terms = c("finsqft[1000:4000 by=500]", "cooling")))
 
+## CODE ALONG 5
 
+1. Insert a code chunk below and model `log(totalvalue)` as function of `finsqft` with a natural spline of 5 `df`, `cooling`, and the interaction of `cooling` and `finsqft` (natural spline of 5 `df`). Call your model `nlm4`.
+
+nlm4 <- lm(log(totalvalue) ~ ns(finsqft, df = 5) + cooling + 
+             ns(finsqft, df = 5):cooling, data = homes)
+
+
+2. Use the `anova` function to check whether the interaction appears necessary. What do you think?
+
+anova(nlm4)
+
+3. Create an effect plot of `finsqft` by `cooling`. Maybe try `[1000:5000 by=250]` for the range of values for `finsqft`.
+
+plot(ggpredict(nlm4, terms = c("finsqft[1000:5000 by=250]", "cooling")))
