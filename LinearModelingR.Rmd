@@ -182,6 +182,7 @@ Let's import the data we'll be using today. The data we'll work with is Albemarl
 ```{r}
 URL <- 'https://raw.githubusercontent.com/clayford/dataviz_with_ggplot2/master/alb_homes.csv'
 homes <- read.csv(file = URL)
+# set categorical variables as factors
 homes$hsdistrict <- factor(homes$hsdistrict)
 homes$cooling <- factor(homes$cooling)
 ```
@@ -438,7 +439,6 @@ These levels are not numbers, so how does R handle this in a linear model? It cr
 Let's look at the default contrast, called a _treatment contrast_. To do this we convert the hsdistrict column to factor and then use the `contrasts()` function. (We don't have to do this to add hsdistrict to our model! I'm just doing this to output the contrast "definition")
 
 ```{r}
-homes$hsdistrict <- factor(homes$hsdistrict)
 contrasts(homes$hsdistrict)
 ```
 
