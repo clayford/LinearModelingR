@@ -195,20 +195,20 @@ head(homes)
 
 Variable name definitions:
 
-- *yearbuilt*: year house was built
-- *finsqft*: size of house in number square feet
-- *cooling*: 'Central Air' versus 'No Central Air'
-- *bedroom*: number of bedrooms
-- *fullbath*: number of full bathrooms (toilet, sink and bath)
-- *halfbath*: number of half bathrooms (toilet and sink only)
 - *lotsize*: size of land on which home is located, in acres
 - *totalvalue*: total assessed value of home and property
 - *esdistrict*: the elementary school the home feeds into
 - *msdistrict*: the middle school the home feeds into
 - *hsdistrict*: the high school the home feeds into
 - *censustract*: the census tract the home is located in
-- *age*: of the house in years as of 2018
+- *yearbuilt*: year house was built
 - *condition*: assessed condition of home (Substandard, Poor, Fair, Average, Good, Excellent)
+- *finsqft*: size of house in number square feet
+- *cooling*: 'Central Air' versus 'No Central Air'
+- *bedroom*: number of bedrooms
+- *fullbath*: number of full bathrooms (toilet, sink and bath)
+- *age*: of the house in years as of 2018
+- *month_sold*: month the house was last sold
 - *fp*: indicator if house has fireplace (0=no, 1=yes)
 
 
@@ -248,15 +248,15 @@ coef(m1)
 This translates to:
 
 ```
-totalprice = -133328.2482 + 284.4613*finsqft + -13218.4091*bedroom +
-               4268.7655*lotsize`
+totalprice = -116423.2343 + 372.8104*finsqft + -34734.0164*bedroom +
+               3660.7231*lotsize`
 ```
 
 Some naive interpretation:
 
-- each additional finished square foot adds about $284 to price
-- each additional bedroom drops the price by $13,218 (?)
-- each additional lot size acre adds about $4268 to price
+- each additional finished square foot adds about $272 to price
+- each additional bedroom drops the price by $34734 (?)
+- each additional lot size acre adds about $3660 to price
 
 Each of these interpretations assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
 
@@ -265,9 +265,9 @@ Is this a "good" model? Let's _simulate data from the model_ and compare it to o
 We could do this by hand:
 
 ```{r}
-sim_values <- -133328.2482 + 284.4613*homes$finsqft + 
-  -13218.4091*homes$bedroom + 4268.7655*homes$lotsize + 
-  rnorm(3025, mean = 0, sd = 227200)
+sim_values <- -116423.2343 + 372.8104*homes$finsqft + 
+  -34734.0164*homes$bedroom + 3660.7231*homes$lotsize + 
+  rnorm(3288, mean = 0, sd = 265800)
 ```
 
 An easier and faster way is to use the `simulate()` function which allows you to generate multiple samples. Here we generate 50 samples. Each sample will have the same number of observations as our original sample (n = 3025). Each sample value is generated using our observed values for `finsqft`, `bedroom`, and `lotsize`. The result is a data frame with 50 columns.
@@ -311,10 +311,10 @@ How to interpret plots:
 
 4. Residuals vs Leverage: for checking for influential observations; points outside the contour lines are influential observations. Leverage is the distance from the center of all predictors. An observation with high leverage has substantial influence on the fitted value.
 
-By default the 3 "most extreme" points are labeled by row number. 2658 appears in all four plots. It's a really big expensive home.
+By default the 3 "most extreme" points are labeled by row number. 3285 appears in all four plots. It's a really big expensive home.
 
 ```{r}
-homes[2658,]
+homes[3285,]
 ```
 
 These plots reveal that our assumptions of normally distributed residuals and constant variance are highly suspect. Our model is just bad.
@@ -339,7 +339,7 @@ Let's try modeling log-transformed `totalvalue`.
 m2 <- lm(log(totalvalue) ~ finsqft + bedroom + lotsize, data = homes)
 ```
 
-The diagnostic plots look better. 
+The diagnostic plots look somewhat better. 
 
 ```{r}
 plot(m2)
@@ -370,9 +370,9 @@ round(coef(m2), 4) * 100
 
 Some naive interpretations:
 
-- each additional finished square foot increases expected mean price by 0.05%. Or multiply by 100 to say each additional 100 finished square feet increases expected mean price by 5%.
-- each additional bedroom increases expected mean price by about 4.3%
-- each additional lot size acre increases expected mean price by about 0.47%
+- each additional finished square foot increases expected mean price by 0.04%. Or multiply by 100 to say each additional 100 finished square feet increases expected mean price by 4%.
+- each additional bedroom increases expected mean price by about 4.4%
+- each additional lot size acre increases expected mean price by about 0.31%
 
 Remember, the interpretation assumes _all other variables are held constant_! 
 
@@ -382,7 +382,7 @@ A slightly more precise estimation can be obtained by _exponentiating_ the coeff
 round(exp(coef(m2)), 4) 
 ```
 
-For example, each additional bedroom (assuming all else held constant) increases expected total price by about 4.4%. Multiplying by 1.0439 is equivalent to adding 4.39%.
+For example, each additional bedroom (assuming all else held constant) increases expected total price by about 4.4%. Multiplying by 1.0444 is equivalent to adding 4.4%.
 
 Let's review the summary output:
 
@@ -396,7 +396,7 @@ SUMMARY OVERVIEW
 - Residuals section: quick assessment of residuals. Ideally 1Q/3Q and Min/Max will be roughly equivalent in absolute value.
 - Coefficients: lists the estimated coefficients along with hypothesis tests for the null that each coefficient is 0. Est/SE = t-value. 
 - Residual standard error: estimate of the constant standard deviation of the normal dist'n of the residuals (noise)
-- degrees of freedom: sample size - number of coefficients (3025 - 4)
+- degrees of freedom: sample size - number of coefficients (3284 - 4)
 - R-squared: proportion of variance explained
 - F-statistic: overall test that all coefficients (except intercept) are 0.
 
@@ -462,7 +462,7 @@ The coefficients for Monticello and Western Albemarle are in relation to Albemar
 round(coef(m4) * 100, 4)
 ```
 
-It appears that the value of a home in Western Albemarle will be about 10% higher than an equivalent home in Albemarle. Likewise it appears that the value of a home in the Monticello district will be about 7% less than an equivalent home in the Albemarle district. 
+It appears that the value of a home in Western Albemarle will be about 10% higher than an equivalent home in Albemarle. Likewise it appears that the value of a home in the Monticello district will be about 3% less than an equivalent home in the Albemarle district. 
 
 ## CODE ALONG 3
 
@@ -641,18 +641,20 @@ We should still check model assumptions.
 plot(nlm3)
 ```
 
-Homes 12, 40, 963 and 1810 seem to stand out. Let's have a look.
+Homes 11, 19, 1089 and 2746 seem to stand out. Let's have a look.
 
 ```{r}
-h <- c(12, 40, 963, 1810)
+h <- c(11, 19, 1089, 2746)
 homes[h,c("totalvalue", "finsqft", "lotsize")]
 ```
-
-Homes 12 and 40 are very low in totalvalue and the model way overpredicts their values. Home 963 has a massive totalvalue with 0 acres of lotsize. Home 1810 is on 611 acres and that value has a high leverage on its fitted value. 
 
 ```{r}
 cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 ```
+
+Homes 11 and 19 are very low in totalvalue and the model way overpredicts their values. Home 1089 has a relatively small totalvalue with 23 acres of lotsize and over 4700 finsqft, but the model way overpredicts its totalvalue as well. Home 2746 is on 140 acres and valued at over 6 million dollars, but has an estimated totalvalue of just over 2 million.
+
+The model is adequate for most homes, but not all. 
 
 ## CODE ALONG 5
 
