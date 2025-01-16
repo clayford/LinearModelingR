@@ -29,7 +29,7 @@ plot(m3)
 
 round(exp(coef(m3)), 3)
 
-Adding a full bath increases value of house by about 17% 
+Adding a full bath increases value of house by about 15% 
 
 4. Insert a code chunk below and simulate data from the model and compare to the observed `totalvalue`. Does this look like a good model?
 
@@ -48,7 +48,7 @@ m5 <- lm(log(totalvalue) ~ fullbath + finsqft + cooling, data = homes)
 
 round(exp(coef(m5)), 3)
 
-Expected value of a home with No Central Air is about 19-20% lower than an equivalent home with Central Air.
+Expected value of a home with No Central Air is about 20% lower than an equivalent home with Central Air.
 
 
 ## CODE ALONG 4
