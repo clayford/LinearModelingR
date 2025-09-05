@@ -89,7 +89,7 @@ _That's one way to think of linear modeling/regression_. You have some numeric r
 
 Traditional linear modeling/multiple regression assumes the following (among others):
 
-1. the formula is a _weighted sum_ of predictors (eg, y = 10 + 5*x)
+1. the formula is a _weighted sum_ of predictors (eg, y = 10 + 5x); the weights (or coefficients) are a _linear function_ of the predictors. In other words, the weights multiply the predictor (5x), they don't divide or exponentiate (x/5 or x^5)
 2. the noise is a random draw from a Normal distribution with mean = 0
 3. the standard deviation of the Normal distribution is constant (eg, 10)
 
@@ -126,7 +126,7 @@ We could use our model estimates to generate data and see if they look similar t
 # d$y <- 10 + 5*x + noise
 d$y2 <- 11.135 + 5.042*d$x + rnorm(25, 0, 9.7)
 plot(y ~ x, data = d) # original data
-points(d$x, d$y2, col = "red") # simulated data
+points(d$x, d$y2, col = "red") # model-simulated data
 ```
 
 
@@ -136,7 +136,7 @@ We can also compare _smooth density curves_ of the original and model-generated 
 hist(d$y, freq = FALSE) # freq = FALSE means area of bars sums to 1
 lines(density(d$y))  # original data
 d$y2 <- 11.135 + 5.042*d$x + rnorm(25, 0, 9.7)
-lines(density(d$y2), col = "red")  # simulate data
+lines(density(d$y2), col = "red")  # model-simulated data
 ```
 
 This looks good as well. The distribution of our model-generated data is very similar to our observed data. You should do this more than once, say 50 times, to ensure the model consistently generates data similar to the observed data. We show one way to do that later in the workshop.
@@ -261,8 +261,8 @@ totalprice = -116423.2343 + 372.8104*finsqft + -34734.0164*bedroom +
 
 Some naive interpretation:
 
-- each additional finished square foot adds about $272 to price
-- each additional bedroom drops the price by $34734 (?)
+- each additional finished square foot adds about $372 to price
+- each additional bedroom drops the price by $34,734 (?)
 - each additional lot size acre adds about $3660 to price
 
 Each of these interpretations assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
@@ -312,7 +312,7 @@ How to interpret plots:
 
 1. Residuals vs Fitted: for checking constant variance; should have a horizontal line with uniform and symmetric scatter of points; if not, evidence that SD is not constant
 
-2. Normal Q-Q: for checking normality of residuals; points should lie close to diagonal line; if not, evidence that noise is not drawn from N(0, SD). This assumption is only really critical if you're planning to use your model to predict exact values (instead of means) and calculate a confidence interval. 
+2. Normal Q-Q: for checking normality of residuals; points should lie close to diagonal line; if not, evidence that noise is not drawn from N(0, SD). _This assumption is only critical if you're planning to use your model to predict individual values (instead of means) and calculate a confidence interval._ 
 
 3. Scale-Location: for checking constant variance; should have a horizontal line with uniform scatter of point; (similar to #1 but easier to detect trend in dispersion)
 
@@ -334,7 +334,7 @@ Non-constant variance can be evidence of a wrong model or a very skewed response
 hist(homes$totalvalue)
 ```
 
-When dealing with a response that is strictly positive and very skew (like dollar amounts), it is common to transform the response to a different scale. A common transformation is a _log transformation_. When we log transform `totalvalue`, the distribution looks a little more symmetric, though it's important to note that is not an assumption of linear modeling!
+When dealing with a response that is strictly positive and very skew (like dollar amounts), it is common to transform the response to a different scale. A common transformation is a _log transformation_. When we log transform `totalvalue`, the distribution looks a little more symmetric, though it's important to note that is _not an assumption of linear modeling_!
 
 ```{r}
 hist(log(homes$totalvalue))
@@ -385,11 +385,14 @@ Remember, the interpretation assumes _all other variables are held constant_!
 
 A slightly more precise estimation can be obtained by _exponentiating_ the coefficients. Below we exponentiate using the `exp()` function and then round to 4 decimal places.
 
+
 ```{r}
-round(exp(coef(m2)), 4) 
+round(exp(coef(m2)), 4)
 ```
 
-For example, each additional bedroom (assuming all else held constant) increases expected total price by about 4.4%. Multiplying by 1.0444 is equivalent to adding 4.4%.
+- Each additional finished square foot increases expected total price by about 0.04%. (Multiplying by 1.0004 is equivalent to adding .04%.) Adding 100 square feet increases expected total price by about 4%. 
+- Each additional bedroom (assuming all else held constant) increases expected total price by about 4.4%. (Multiplying by 1.0444 is equivalent to adding 4.4%.)
+- Each additional acre increases expected value by about 0.3%.  (Multiplying by 1.0031 is equivalent to adding 0.3%.)
 
 Let's review the summary output:
 
@@ -435,7 +438,7 @@ According to our model, each additional bedroom adds about 3% to 6% to the value
 
 ## Categorical predictors
 
-Let's add `hsdistrict` to the model we just fit. Does being in a particular high school district affect total value of a home? Here's a quick tally:
+Let's add `hsdistrict` to the model we just fit. Does being in a particular high school district affect expected total value of a home? Here's a quick tally:
 
 ```{r}
 table(homes$hsdistrict)
@@ -454,7 +457,6 @@ A model with `hsdistrict` will have two coefficients: `Monticello` and  `Western
 - a home in Albemarle HS district gets two zeroes
 - a home in Monticello HS district gets a one in the Monticello column
 - a home in Western Albemarle HS district gets a one in the West Alb column
-
 
 Let's fit our new model.
 
@@ -648,20 +650,22 @@ We should still check model assumptions.
 plot(nlm3)
 ```
 
-Homes 11, 19, 1089 and 2746 seem to stand out. Let's have a look.
+Homes 469, 700 and 2746 seem to stand out. Let's have a look.
 
 ```{r}
-h <- c(11, 19, 1089, 2746)
-homes[h,c("totalvalue", "finsqft", "lotsize")]
+h <- c(469, 700, 2746)
+fit <- exp(fitted(nlm3)[h]) # get fitted values
+cbind(homes[h,c("totalvalue","finsqft", "lotsize", "hsdistrict")], fit)
 ```
 
 ```{r}
 cbind(observed = homes$totalvalue[h], fitted = exp(fitted(nlm3)[h]))
 ```
 
-Homes 11 and 19 are very low in totalvalue and the model way overpredicts their values. Home 1089 has a relatively small totalvalue with 23 acres of lotsize and over 4700 finsqft, but the model way overpredicts its totalvalue as well. Home 2746 is on 140 acres and valued at over 6 million dollars, but has an estimated totalvalue of just over 2 million.
+Home 469 is way overpredicted to be 5.3 million when it's only 833,000. Likewise home 700 is overpredicted to be 11 million when it's "only" 3 million. Home 2476 is way underpredicted at 2 million when it's valued at over 6 million
 
 The model is adequate for most homes, but not all. 
+
 
 ## CODE ALONG 5
 
@@ -886,6 +890,9 @@ One approach to addressing collinearity concerns is to use a data reduction tech
 Ridge regression is another method sometimes employed to deal with collinearity.
 
 For models that are intended for making predictions, collinearity is not much of a concern. 
+
+For more information, you may find this article helpful:
+<https://library.virginia.edu/data/articles/addressing-multicollinearity>
 
 
 ## Transformation guidelines
