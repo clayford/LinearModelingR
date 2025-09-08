@@ -55,7 +55,7 @@ plot(y ~ x, data = d)
 Now let's add some "noise" to our data by adding random draws from a Normal
 distribution with mean = 0 and a standard deviation = 10. 
 
-We can visualize a Normal distribution in R using the `curve()` function.
+We can visualize this Normal distribution in R using the `curve()` function. The `dnorm()` function is the formula that produces the normal bell curve. Below we draw it with x values ranging from -30 to 30 (ie, 3 standard deviations).
 
 ```{r}
 curve(dnorm(x, mean = 0, sd = 10), from = -10*3, to = 10*3)
@@ -63,7 +63,7 @@ curve(dnorm(x, mean = 0, sd = 10), from = -10*3, to = 10*3)
 
 The `rnorm()` function allows us to draw random values from a Normal distribution.
 
-`set.seed(1)` ensures we all generate the same "random" data:
+`set.seed(1)` ensures we all generate the same "random" data.
 
 ```{r}
 set.seed(1)
@@ -87,7 +87,7 @@ What if we were given this data and told to determine the process that generated
 
 _That's one way to think of linear modeling/regression_. You have some numeric response (or dependent) variable, and you want to find the model (or the formula) that generated the data. 
 
-Traditional linear modeling/multiple regression assumes the following (among others):
+Traditional linear modeling/multiple regression assumes the following:
 
 1. the formula is a _weighted sum_ of predictors (eg, y = 10 + 5x); the weights (or coefficients) are a _linear function_ of the predictors. In other words, the weights multiply the predictor (5x), they don't divide or exponentiate (x/5 or x^5)
 2. the noise is a random draw from a Normal distribution with mean = 0
@@ -265,7 +265,7 @@ Some naive interpretation:
 - each additional bedroom drops the price by $34,734 (?)
 - each additional lot size acre adds about $3660 to price
 
-Each of these interpretations assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home. Does this make sense? 
+Each of these interpretations assumes _all other variables are held constant_! So adding a bedroom to a house, without increasing the lot size or finished square feet of the house, is estimated to drop the value of a home.  
 
 Is this a "good" model? Let's _simulate data from the model_ and compare it to our observed data. A "good" model should generate data that looks similar to the original data. 
 
@@ -352,6 +352,12 @@ The diagnostic plots look somewhat better.
 plot(m2)
 ```
 
+Homes 700, 1131, and 469 seem to be influencing our model.
+
+```{r}
+homes[c(700, 1131, 469), c("totalvalue", "finsqft", "bedroom", "lotsize")]
+```
+
 But is this a "good model"? Is our proposed model of weighted sums good? Let's simulate data and compare to observed data.
 
 ```{r}
@@ -369,7 +375,7 @@ Let's say we're happy with this model. How do we interpret the coefficients? Sin
 round(coef(m2), 4)
 ```
 
-These are proportions. To get percentages, multiply by 100.
+These are approximate _proportional_ differences. To get percentages, multiply by 100.
 
 ```{r}
 round(coef(m2), 4) * 100
@@ -377,9 +383,9 @@ round(coef(m2), 4) * 100
 
 Some naive interpretations:
 
-- each additional finished square foot increases expected mean price by 0.04%. Or multiply by 100 to say each additional 100 finished square feet increases expected mean price by 4%.
-- each additional bedroom increases expected mean price by about 4.4%
-- each additional lot size acre increases expected mean price by about 0.31%
+- each additional finished square foot increases expected mean total value by 0.04%. Or multiply by 100 to say each additional 100 finished square feet increases expected mean total value by 4%.
+- each additional bedroom increases expected mean total value by about 4.4%
+- each additional lot size acre increases expected mean total value by about 0.31%
 
 Remember, the interpretation assumes _all other variables are held constant_! 
 
@@ -392,7 +398,7 @@ round(exp(coef(m2)), 4)
 
 - Each additional finished square foot increases expected total price by about 0.04%. (Multiplying by 1.0004 is equivalent to adding .04%.) Adding 100 square feet increases expected total price by about 4%. 
 - Each additional bedroom (assuming all else held constant) increases expected total price by about 4.4%. (Multiplying by 1.0444 is equivalent to adding 4.4%.)
-- Each additional acre increases expected value by about 0.3%.  (Multiplying by 1.0031 is equivalent to adding 0.3%.)
+- Each additional acre increases expected value by about 0.31%.  (Multiplying by 1.0031 is equivalent to adding 0.31%.)
 
 Let's review the summary output:
 
@@ -694,10 +700,10 @@ Things get more complicated when you have, say, binary responses or multiple mea
 - survival models (for responses that measure time to an event)
 - time series models (for responses that exhibit, say, seasonal variation over time)
 
-**References**
+## References
 
-- Faraway, J. (2005). _Linear Models in R_. London: Chapman & Hall.
-- Fox, J. (2002). _A R and S-Plus Companion to Applied Regression_. London: Sage.
+- Faraway, J. (2025). _Linear Models in R_. (3rd ed.). London: Chapman & Hall.
+- Fox, J. (2019). _A R Companion to Applied Regression_ (3rd ed.). London: Sage.
 - Harrell, F. (2015). _Regression Modeling Strategies_ (2nd ed.). New York: Springer.
 - Kutner, M., et al. (2005). _Applied Linear Statistical Models_ (5th ed.). New York: McGraw-Hill.
 - Maindonald J., Braun, J.W. (2010). _Data Analysis and Graphics Using R_ (3rd ed.). Cambridge: Cambridge Univ Press.
@@ -793,7 +799,7 @@ Anova(m2)
 
 ## AIC and BIC
 
-AIC (Akaike Information Criterion) is a statistic designed to help us choose a model with the best predictive power among a group of models. The value of  AIC doesn't really have any interpretation. It's meant to be compared to other AIC values. The lower the AIC the better. We can use the `AIC()` function in R to compare multiple models. For example, `mod_03` seems preferable to `mod_02` because the AIC value is so much smaller. 
+AIC (Akaike Information Criterion) is a statistic designed to help us choose a model with the best predictive power among a group of models. The value of AIC doesn't really have any interpretation. It's meant to be compared to other AIC values. The lower the AIC the better. We can use the `AIC()` function in R to compare multiple models. For example, `mod_03` seems preferable to `mod_02` because the AIC value is so much smaller. 
 
 ```{r}
 AIC(mod_02, mod_03)
@@ -928,14 +934,14 @@ lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
   symbox()
 ```
 
-A statistical "search" for the "best" power transformation can be performed with the `powerTransform()` function, also in the car package. The usual practice is to convert the result to the closest simple power listed above. For example, we can pipe the model result into `powerTransform()` and see the "best" transformation is about 0.16.
+A statistical "search" for the "best" power transformation can be performed with the `powerTransform()` function, also in the car package. The usual practice is to convert the result to the closest simple power listed above. For example, we can pipe the model result into `powerTransform()` and see the "best" transformation is about 0.28.
 
 ```{r}
 lm(totalvalue ~ finsqft + bedroom + lotsize, data = homes) |>
   powerTransform() 
 ```
 
-0.16 is close to 0, so it makes sense to proceed with a log transformation. That greatly simplifies interpretation.
+0.28 is close to 0, so it makes sense to proceed with a log transformation. That greatly simplifies interpretation.
 
 
 ## ggplot2 code for creating plot of simulated data
